@@ -1,14 +1,15 @@
 classdef SEMinefield < handle
     properties(Constant)
-        POSSIBLE_LAYOUTS = {'uniform','rand','randn','se4003_delux','derez_distribution'}  % Possible layout
+        LAYOUTS = {'uniform','rand','randn','se4003_delux','derez_distribution'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
+        MINE_TYPES = {'mobile','static'};
     end
 
     properties
         number_of_mines = 0 % Number of mines
         mines;   % mine or mobile mine objects (number_of_mines x 1)
         axes_h  % Color blob (could be a placeholder for visualization)
-        layout = 'unfirom' % How the mines are arrayed = only supporting random uniform distrubition right now
+        layout = 'uniform' % How the mines are arrayed = only supporting random uniform distrubition right now
 
         % REMOVE after June 7, 2024
         % Note: these should be placed in the individual mine classes as
@@ -24,8 +25,20 @@ classdef SEMinefield < handle
         boundary_width = 2 % Boundary width
         boundary_height = 5 % Boundary height
     end
+
+    properties(SetAccess=protected)
+        mineType = 'mobile';
+    end
     
     methods
+        function didSet = setMineType(obj, mineType)
+            didSet = false;
+            if any(strcmpi(mineType,obj.MINE_TYPES))
+                obj.mineType = lower(mineType);
+                obj.reset();
+            end
+        end
+
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
             narginchk(0,4);
@@ -74,7 +87,7 @@ classdef SEMinefield < handle
             didSet = false;
             if nargin>=1 && ~isempty(num_mines) && num_mines>=0
                 obj.number_of_mines = num_mines;
-                obj.resetInitalize();
+                obj.reset();
                 didSet = true;
             end
         end
@@ -86,7 +99,7 @@ classdef SEMinefield < handle
             end               
         end
 
-        function distributeMines(obj)
+        function resetLayout(obj)
             obj.setLayout();
         end
 
@@ -97,7 +110,7 @@ classdef SEMinefield < handle
                 minefieldLayout = obj.layout;
             end
 
-            if any(strcmpi(minefieldLayout, obj.POSSIBLE_LAYOUTS))
+            if any(strcmpi(minefieldLayout, obj.LAYOUTS))
                 obj.layout = minefieldLayout;
                 didSet = true;
 
@@ -124,19 +137,30 @@ classdef SEMinefield < handle
                     minePosition = xyCoords(mineIndex, :);
                     obj.setPosition(mineIndex, minePosition);
                 end
+                obj.refreshDisplay();
             end
         end
             
-        % TODO - update this for SEMobileMine
-        function resetInitalize(obj)            
-            obj.mines = repmat(SEMobileMine,obj.number_of_mines,1);
+        % Reset the simulation for the current configuration
+        function reset(obj)            
+            switch lower(obj.mineType)
+                case 'mobile'
+                    mineClass = @SEMobileMine;
+                case 'static'
+                    mineClass = @SEMine;
+                otherwise
+                    warning('Unrecognized mine type ''%s'', mobile mines will be used', obj.mineType);
+                    mineClass = @SEMobileMine;
+            end
+            obj.mines = repmat(mineClass(),obj.number_of_mines,1);
+            
             for n = 1:obj.number_of_mines
-               obj.mines(n) = SEMobileMine(nan, nan,obj.axes_h);
+               obj.mines(n) = mineClass(nan, nan,obj.axes_h);
             end
 
             % This will update the location of the mines according to the
             % current layout.
-            obj.setLayout(obj.layout);
+            obj.resetLayout();
         end
         
         function update(obj)

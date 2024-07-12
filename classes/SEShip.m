@@ -4,14 +4,14 @@ classdef SEShip<handle
         pos_x;
         pos_y;
         ship_type = 'General'; % Placeholder for now
-        speed = 0; % speed in knots (0-30) (nm/hour)
+        speed_nmh = 500; % speed in knots (0-30) (nm/hour)
         %shipPriority = 1; % scales based off total number of ships
-        heading = 0; % 0-359 degrees
+        heading_deg = 90; % 0-359 degrees  (90 degrees is North)
         start_x; % set start x position on 2D Grid
         start_y; % set start y position on 2D Grid
         end_x; % set end x position on 2D Grid
         end_y; % set end y position on 2D Grid
-        time_step; % arbitrary time unit; dt
+        time_step = 1; % arbitrary time unit; dt
         face_color = [0.5, 0.5, 0.5];
     end
 
@@ -64,6 +64,8 @@ classdef SEShip<handle
             end                
             obj.start_x = pos_x;
             obj.start_y = pos_y;
+            obj.pos_x = pos_x;
+            obj.pos_y = pos_y;
         end
 
         function setEndPosition(obj, pos_x,pos_y)
@@ -77,8 +79,18 @@ classdef SEShip<handle
         end
 
         function cur_heading = updateHeading(obj)
-            cur_heading = atand((obj.end_x-obj.pos_x)/(obj.end_y-obj.pos_y));
-            obj.heading = cur_heading;
+            % Calculate the differences in x and y
+            dx = obj.end_x - obj.pos_x;
+            dy = obj.end_y - obj.pos_y;
+            % Calculate the heading angle in degrees using atan2d
+            cur_heading = atan2d(dy, dx);
+
+            % Ensure the heading is in the range [0, 360) degrees
+            if cur_heading < 0
+                cur_heading = cur_heading + 360;
+            end
+            % cur_heading = atand(x(obj.end_x-obj.pos_x)/(obj.end_y-obj.pos_y));
+            % obj.heading_deg = cur_heading;
         end
 
         function isIt = isAlive(obj)
@@ -102,8 +114,29 @@ classdef SEShip<handle
 
         function updatePosition(obj)
             updateHeading(obj);
-            obj.pos_x = obj.pos_x + obj.time_step*obj.speed*sind(obj.heading);
-            obj.pos_y = obj.pos_y + obj.time_step*obj.speed*cosd(obj.heading);      
+
+            % Conversion
+            time_multiplier = 10; % Speed up the simulation by this factor
+            nm_per_second = (obj.speed_nmh / 3600) * time_multiplier; 
+            fps = 10;
+            distance_per_frame = nm_per_second / fps;
+
+            % Convert heading to radians
+            heading_rad = obj.heading_deg * pi / 180;
+
+            % Calculate dx and dy from heading
+            dx = cos(heading_rad);
+            dy = sin(heading_rad);
+
+            obj.pos_x = obj.pos_x + distance_per_frame*dx;
+            obj.pos_y = obj.pos_y + distance_per_frame*dy;
+
+            % % Updating position
+            % x_pos = x_pos + distance_per_frame * dx;
+            % y_pos = y_pos + distance_per_frame * dy;
+
+            % obj.pos_x = obj.pos_x + obj.time_step*obj.speed_nmh*sind(obj.heading_deg);
+            % obj.pos_y = obj.pos_y + obj.time_step*obj.speed_nmh*cosd(obj.heading_deg);      
         end
 
         function showPath(obj, shouldShow)

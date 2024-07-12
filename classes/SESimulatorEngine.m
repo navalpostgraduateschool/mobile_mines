@@ -5,13 +5,18 @@ classdef SESimulatorEngine < handle
         boundary_box % Boundary box:  [x-coordinate, y-coordinate, width, height]
         minfield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
         axes_h % Graphics Handle for axes things will be drawn to
-        fps = 20; % desired frames per second
+        fps = 10; % desired frames per second
         mineDamageRange % Mine damage radius
         minedetectRange % mine detection range
 
-        curIteration = 0;
-        numIterations = 1;
+        time_multiplier = 10; % Speed up the simulation by this factor
+        animate = true;
 
+        curSimulation = 0;  % the current simulation being run.  Each simulation consists of a number of steps where the fleet goes through the minefiles
+        numSimulations = 1;  % The number of simulations to run
+
+        curSimulationStep = 0;
+        maxSimulationSteps = 50;
     end
     
     methods
@@ -29,10 +34,17 @@ classdef SESimulatorEngine < handle
                 obk.setMinefieldBox(minefield_box);
 
                 if nargin>1
-
                     obj.setAxesHandle(axes_handle);
                 end
             end            
+        end
+
+        % Reset the simulation for the current configuration
+        function reset(obj)
+            rng(obj.curSimulation); % seed randomizer for repeatability
+            obj.fleet.reset();
+            obj.minefield.reset();
+            obj.curSimulationStep = 0;
         end
 
         function num = getNumShips(obj)
@@ -47,13 +59,42 @@ classdef SESimulatorEngine < handle
             num = obj.minefield.getNumUnexplodedMines();
         end
 
+        % Available ships include those that have not been sunk
+        % and that have yet to transit through the minefield
+        function num = getNumShipsAvailable(obj)
+
+        end
+
         function num = getNumUnsunkShips(obj)
             num = obj.fleet.getNumAlive();
         end
 
-        function run(obj, numIterations)
+        function run(obj, numSimulationsToRun)
+            if nargin<2 || isempty(numSimulationsToRun) || numSimulationsToRun < 0
+                numSimulationsToRun = 1;
+            end
 
+            % make sure we aren't dealing with rational/decimal numbers
+            obj.numSimulations = floor(numSimulationsToRun);
 
+            for simulationNum = 1:obj.numSimulations
+                obj.curSimulation = simulationNum;
+                obj.reset();
+                while ~obj.simulationDone()
+                    obj.update();
+                end
+            end
+        end
+
+        function isDone = simulationDone(obj)
+            maxSteps = obj.maxSimulationSteps*obj.fps*obj.time_multiplier;
+            isDone = 0 == obj.getNumShipsRemaining() || ...
+                0 == obj.getNumUnexplodedMines() || ...
+                obj.curSimulationStep >= maxSteps;
+        end
+
+        function num = getNumShipsRemaining(obj)
+            num = obj.fleet.getNumShipsRemaining();
         end
 
         function setBoundaryBox(obj, boundary_box)
@@ -74,7 +115,7 @@ classdef SESimulatorEngine < handle
         end
 
         function layouts = getValidMinefieldLayouts(obj)
-            layouts = obj.minefield.POSSIBLE_LAYOUTS;
+            layouts = obj.minefield.LAYOUTS;
         end
 
         function didSet = setFleetBehavior(obj, behavior)
@@ -85,14 +126,12 @@ classdef SESimulatorEngine < handle
             didSet = obj.minefield.setLayout(layout);
         end
 
-        
-
         function didSet = setNumMines(obj, numMines)
             didSet = false;
             if nargin>1 && ~isempty(numMines) && numMines>= 0
                 didSet = obj.minefield.setNumMines(numMines);
                 if didSet
-                    obj.minefield.distributeMines();
+                    obj.minefield.resetLayout();
                 end
             end
         end
@@ -121,20 +160,24 @@ classdef SESimulatorEngine < handle
                 didSet = obj.fleet.setNumShips(numShips);
             end
         end
-
      
 
         % TODO - talk with @hyatt about the updateFleetPosition method and
         % detection of detonations ...
         function update(obj)
             % Update fleet position
-            obj.updateFleetPosition();
+            obj.fleet.update();
             
             % Update minefield
             obj.minefield.update();
             
             % Check for mine detonations
             obj.detectMineDetonations();
+
+            if obj.animate
+                pause(1/obj.fps);
+            end
+            obj.curSimulationStep = obj.curSimulationStep + 1;
         end
         
         function refreshDisplay(obj)
@@ -149,10 +192,10 @@ classdef SESimulatorEngine < handle
 
         function detectMineDetonations(obj)
             for i = 1:obj.getNumShips()
-                ship = obj.fleet.graphicsHandle.Ships(i);
-                if obj.minefield.isInDamageRange(ship.PositionX, ship.PositionY)
-                    obj.minefield.mineExplosion(i);
-                end
+                % ship = obj.fleet.graphicsHandle.Ships(i);
+                % if obj.minefield.isInDamageRange(ship.PositionX, ship.PositionY)
+                %     obj.minefield.mineExplosion(i);
+                % end
             end
         end        
 

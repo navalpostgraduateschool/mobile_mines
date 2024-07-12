@@ -6,30 +6,25 @@ classdef SEFleet < handle
 
     properties
         ships;     % Vector of SEShip objects (numShips x 1)
-        behavior = 'Kamikaze'; % Current behavior of the fleet
+        behavior = 'Will Kamikaze'; % Current behavior of the fleet
         numShips = 0; % Number of ships in the fleet - default to 0 to help with initialization
         axesHandle % Handle for graphical representation        
         operatingBoundary = [0 0 6 9];  % lower left point (x,y) and size (width, height)
         startPos;
         endPos;
-       
+        activeShipIndex; % keeps track of which speed
     end    
     
     methods
         % Constructor to initialize the fleet
         function obj = SEFleet(boundaryBox, numShips, fleetBehavior, axesHandle)
-
             narginchk(0,4);
-
             if nargin>0
                 obj.setBoundaryBox(boundaryBox);
-
                 if nargin>1
                     obj.setNumShips(numShips);
-
                     if nargin>2
                         obj.setBehavior(fleetBehavior);
-
                         if nargin>3
                             obj.setAxesHandle(axesHandle);
                         end
@@ -37,6 +32,17 @@ classdef SEFleet < handle
                 end
             end
         end
+
+        % Reset the fleet for the current configuration
+        function reset(obj)
+            obj.setNumShips(obj.numShips); %  this invokes obj.resetBehavior()
+            % obj.activeShipIndex = 1;
+            % if obj.numShips==0
+            %     obj.activeShipIndex = [];
+            % end
+        end
+
+        
 
         %axes sync
         function didSet = setAxesHandle(obj, axesHandle)
@@ -56,9 +62,15 @@ classdef SEFleet < handle
             end
         end
 
+        % num is the number of ships that have not been sunk
+        % and have not yet transited out of the minefield
+        function num = getNumShipsRemaining(obj)
+            num = 0;
+
+        end
+
         function num = getNumUnsunkShips(obj)
-
-
+            num = obj.getNumAlive();
         end
         
         %sets bounds
@@ -66,11 +78,11 @@ classdef SEFleet < handle
             didSet = false;
             if numel(bounds) == 4
                 obj.operatingBoundary = bounds;
-                obj.refreshBehavior();
+                obj.resetBehavior();
             end
         end
 
-        function refreshBehavior(obj)
+        function resetBehavior(obj)
             obj.setBehavior(obj.behavior);
         end
 
@@ -90,7 +102,8 @@ classdef SEFleet < handle
                     obj.ships(k).setStartEndPositions(start_positions(k,:), ...
                         end_positions(k,:));
                 end
-                didSet=true;                
+                didSet=true;  
+                obj.refreshDisplay();
             end
         end
 
@@ -102,7 +115,13 @@ classdef SEFleet < handle
             end
         end
 
+        function updateActiveShip(obj)
+            % obj.activeShipIndex;
+        end
+
         function update(obj)
+            % do we have any active ships
+            obj.updateActiveShip();
             for n = 1:obj.numShips
                 obj.ships(n).update();
             end
@@ -121,7 +140,7 @@ classdef SEFleet < handle
 
                 % This causes a refresh for the ships initial and end
                 % points
-                obj.refreshBehavior();
+                obj.resetBehavior();
                 didSet = true;
             end
         end
@@ -130,7 +149,6 @@ classdef SEFleet < handle
         function [startPos, endPos]=getStartEndPositions(obj)
             startPos = nan(obj.numShips, 2);
             endPos = nan(obj.numShips, 2);
-
 
             opX = obj.operatingBoundary(1);
             opY = obj.operatingBoundary(2);
@@ -171,19 +189,19 @@ classdef SEFleet < handle
         % TODO - talk with @hyatt about this method and where to utilize it
         % in the class
         % Method to update the position of the fleet
-        %function updatePosition(obj)
+        function updatePositions(obj)
             % Assuming each ship has a method to update its position
-         %   for i = 1:obj.numShips
+            for i = 1:obj.numShips
                 % TODO - discuss misconception here
-          %      obj.ships(i).updatePosition();
-                % /obj.axesHandle.Ships(i).updatePosition(newPosition);
-           % end
-            
+                obj.ships(i).updatePosition();
+                obj.axesHandle.Ships(i).updatePosition(newPosition);
+            end
+
             % TODO - are these below comments a todo for yourself?  Let's discuss if it is a
             % remaining todo or just left over and can be removed
-            %pull heading and speed from ship info, use that to update
-            %position every xx frames
-        %end
+            % pull heading and speed from ship info, use that to update
+            % position every xx frames
+        end
 
         % Method to update the priority of the fleet
         %function updatePriority(obj, newPriority)
@@ -201,5 +219,24 @@ classdef SEFleet < handle
                 numAlive = numAlive + obj.ships(n).isAlive();                
             end
         end
+
+        function status = getStatus(obj)
+            status = struct('numAlive',0,...
+                'numSuccess', 0, ...
+                'numSunk', 0,...
+                'numRemaining', 0, ...
+                'numTransiting', 0);
+            for n = 1:obj.numShips
+                status.numAlive = status.numAlive + obj.ships(n).isAlive();
+                status.numSunk = status.numAlive + obj.ships(n).isAlive();
+            end
+            status.numSunk = obj.numShips - status.numAlive;
+        end
+
+        function num = getNumShipsLeftToTransit(obj)
+            status = obj.getStatus();
+            num = status.numRemaining;
+        end
+
     end
 end
