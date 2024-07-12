@@ -31,9 +31,12 @@ classdef SEMine < handle
         end
 
         function delete(obj)
-            if ~isempty(obj.graphic_h) && isvalid(obj.graphic_h)
-                delete(obj.graphic_h);
-            end
+            % deleteHandles is a custom function.
+            deleteHandles(obj.graphic_h);
+
+            % This is the superclass method for delete the object, which we
+            % need to specifiy explicitly since we have overloaded the
+            % method.
             delete@handle(obj);
         end
 
@@ -102,7 +105,6 @@ classdef SEMine < handle
             obj.pos_y = y;
             didSet = true;
         end
-
         
         function detected = hasDetected(obj, ship_x, ship_y)
             % Determine if a ship is within detection range
@@ -110,10 +112,10 @@ classdef SEMine < handle
             detected = (distance <= obj.detectRange);
         end
         
-        function detonation(obj)
+        function explode(obj)
             % Broadcast explosion event and kills mine
+            obj.notify('Exploded');
             obj.alive = false;
-            % Add code to broadcast explosion event
         end
         
         function [inRange, distance] = isInDetectionRange(obj, xyPosToCheck)
@@ -133,7 +135,6 @@ classdef SEMine < handle
             inRange = distance <= obj.(rangeParameter);
         end
 
-        
         function aliveStatus = isAlive(obj)
             % Determine status of alive
             aliveStatus = obj.alive;
@@ -142,10 +143,6 @@ classdef SEMine < handle
         function armedStatus = isArmed(obj)
             armedStatus = obj.armed;
         end
-        
+
     end
 end
-
-
-
-

@@ -36,9 +36,7 @@ classdef SEShip<handle
         end
 
         function delete(obj)
-            if ~isempty(obj.graphic_h) && isvalid(obj.graphic_h)
-                delete(obj.graphic_h);
-            end
+            deleteHandles([obj.graphic_h, obj.heading_h]);
             delete@handle(obj);
         end
 

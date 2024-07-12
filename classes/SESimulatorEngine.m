@@ -179,8 +179,8 @@ classdef SESimulatorEngine < handle
             stats.shipsRemaining = obj.getNumUnsunkShips();
 
             %% 7.1 **Transit Success Rate**:            
-            stats.numShips = obj.numShips;
-            stats.proportionShipsRemaining = stats.shipsRemaining / obj.numShips;  %transitSuccessRate = # of ships alive at end / # of ships at start
+            stats.numShips = obj.getNumShips();
+            stats.proportionShipsRemaining = stats.shipsRemaining / stats.numShips;  %transitSuccessRate = # of ships alive at end / # of ships at start
             % transitSuccessRate - but only if you have completed the loop
             
             
