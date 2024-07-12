@@ -2,8 +2,6 @@ classdef SESimulatorEngine < handle
     properties(SetAccess=protected)
         fleet % SEFleet object
         minefield % SEMinefield object
-        numShips % Number of ships in the fleet
-        numMines % Number of mines in the minefield
         boundary_box % Boundary box:  [x-coordinate, y-coordinate, width, height]
         minfield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
         axes_h % Graphics Handle for axes things will be drawn to
@@ -37,6 +35,14 @@ classdef SESimulatorEngine < handle
             end            
         end
 
+        function num = getNumShips(obj)
+            num = obj.fleet.numShips;
+        end
+
+        function num = getNumMines(obj)
+            num = obj.minefield.number_of_mines;
+        end
+
         function num = getNumUnexplodedMines(obj)
             num = obj.minefield.getNumUnexplodedMines();
         end
@@ -54,8 +60,8 @@ classdef SESimulatorEngine < handle
             obj.fleet.setBoundaryBox(boundary_box);
         end
 
-        function setMinefieldBox(obj, minefield_box)
-            obj.minefield.setBoundaryBox(minefield_box);
+        function didSet = setMinefieldBox(obj, minefield_box)
+            didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
 
         function setAxesHandle(obj, axes_h)
@@ -71,20 +77,23 @@ classdef SESimulatorEngine < handle
             layouts = obj.minefield.POSSIBLE_LAYOUTS;
         end
 
-        function setFleetBehavior(obj, behavior)
-            obj.fleet.setBehavior(behavior);
+        function didSet = setFleetBehavior(obj, behavior)
+            didSet = obj.fleet.setBehavior(behavior);
         end
 
-        function setMinefieldLayout(obj, layout)
-            obj.minefield.setLayout(layout);
+        function didSet = setMinefieldLayout(obj, layout)
+            didSet = obj.minefield.setLayout(layout);
         end
+
+        
 
         function didSet = setNumMines(obj, numMines)
             didSet = false;
             if nargin>1 && ~isempty(numMines) && numMines>= 0
-                obj.numMines = floor(numMines);
-                obj.minefield.setNumMines(obj.numMines);
-                didSet = true;
+                didSet = obj.minefield.setNumMines(numMines);
+                if didSet
+                    obj.minefield.distributeMines();
+                end
             end
         end
 
@@ -109,9 +118,7 @@ classdef SESimulatorEngine < handle
         function didSet = setNumShips(obj, numShips)
             didSet = false;
             if nargin>1 && ~isempty(numShips) && numShips>= 0
-                obj.numShips = floor(numShips);
-                obj.fleet.setNumShips(obj.numShips);
-                didSet = true;
+                didSet = obj.fleet.setNumShips(numShips);
             end
         end
 
@@ -133,7 +140,6 @@ classdef SESimulatorEngine < handle
         function refreshDisplay(obj)
             obj.minefield.refreshDisplay();
             obj.fleet.refreshDisplay();
-
         end
 
         function updateFleetPosition(obj)
@@ -142,7 +148,7 @@ classdef SESimulatorEngine < handle
         
 
         function detectMineDetonations(obj)
-            for i = 1:obj.numShips
+            for i = 1:obj.getNumShips()
                 ship = obj.fleet.graphicsHandle.Ships(i);
                 if obj.minefield.isInDamageRange(ship.PositionX, ship.PositionY)
                     obj.minefield.mineExplosion(i);
@@ -183,7 +189,7 @@ classdef SESimulatorEngine < handle
 
             %% 7.4 **Mine Statistics**:
             stats.minesRemaining = obj.getNumUnexplodedMines();            
-            stats.numMines = obj.numMines;            
+            stats.numMines = obj.getNumMines();
             stats.minesDetonated = stats.numMines - stats.minesRemaining;
             stats.proportionMinesRemaining = stats.minesRemaining / stats.numMines;
             

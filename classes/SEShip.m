@@ -21,8 +21,7 @@ classdef SEShip<handle
         health = 4;
         armor = 4;
         axes_h;
-        graphics_h; % unused?
-        ship_h; % ship graphic handle       
+        graphic_h; % ship graphic handle       
         heading_h;  % holds a line showing where the ship is going to go
     end
 
@@ -34,6 +33,13 @@ classdef SEShip<handle
                     obj.initDisplay(axes_handle);
                 end
             end
+        end
+
+        function delete(obj)
+            if ~isempty(obj.graphic_h) && isvalid(obj.graphic_h)
+                delete(obj.graphic_h);
+            end
+            delete@handle(obj);
         end
 
         function setStartEndPositions(obj, startPos, endPos)
@@ -111,8 +117,8 @@ classdef SEShip<handle
             if isempty(obj.heading_h) || ~ishandle(obj.heading_h)
                 obj.heading_h = line('parent',[],'linestyle','-.','color','w');
             end
-            if isempty(obj.ship_h) || ~ishandle(obj.ship_h)
-                obj.ship_h = line('parent',[],'xdata',nan,'ydata',nan,'marker','d','markersize',16,...
+            if isempty(obj.graphic_h) || ~ishandle(obj.graphic_h)
+                obj.graphic_h = line('parent',[],'xdata',nan,'ydata',nan,'marker','d','markersize',16,...
                     'markerfacecolor',obj.face_color,'markeredgecolor','k');
             end
             if nargin > 1
@@ -123,7 +129,7 @@ classdef SEShip<handle
         function setAxesHandle(obj, axes_handle_in)
             if ishandle(axes_handle_in)
                 obj.axes_h = axes_handle_in;
-                obj.ship_h.Parent = axes_handle_in;
+                obj.graphic_h.Parent = axes_handle_in;
                 obj.heading_h.Parent = axes_handle_in;
                 obj.updateDisplay();
             else
@@ -138,8 +144,8 @@ classdef SEShip<handle
                 visibility = 'off';
             end
 
-            if ishandle(obj.ship_h)
-                set(obj.ship_h,'markerfacecolor',obj.face_color,'xdata',obj.pos_x,'ydata',obj.pos_y, ...
+            if ishandle(obj.graphic_h)
+                set(obj.graphic_h,'markerfacecolor',obj.face_color,'xdata',obj.pos_x,'ydata',obj.pos_y, ...
                     'visible',visibility);
             end
             if ishandle(obj.heading_h)

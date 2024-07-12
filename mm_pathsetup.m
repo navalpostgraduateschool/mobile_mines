@@ -5,7 +5,7 @@ function mPathname = mm_pathsetup(mPathname)
     
     if(~isdeployed)
         addpath(mPathname);
-        subPaths = {'classes','app','tests'};
+        subPaths = {'classes','app','tests','misc'};
         
         for s=1:numel(subPaths)
             addpath(genpath(fullfile(mPathname,subPaths{s})));

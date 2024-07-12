@@ -1,13 +1,14 @@
 classdef SEMinefield < handle
     properties(Constant)
-        POSSIBLE_LAYOUTS = {'rand','randn','se4003_delux','derez_distribution'}  % Possible layout
+        POSSIBLE_LAYOUTS = {'uniform','rand','randn','se4003_delux','derez_distribution'}  % Possible layout
+        DEFAULT_BOUNDARY_BOX = [0 0 2 5];
     end
 
     properties
         number_of_mines = 0 % Number of mines
         mines;   % mine or mobile mine objects (number_of_mines x 1)
         axes_h  % Color blob (could be a placeholder for visualization)
-        layout = 'rand' % How the mines are arrayed = only supporting random uniform distrubition right now
+        layout = 'unfirom' % How the mines are arrayed = only supporting random uniform distrubition right now
 
         % REMOVE after June 7, 2024
         % Note: these should be placed in the individual mine classes as
@@ -17,7 +18,7 @@ classdef SEMinefield < handle
         % damage_Range  % The range that enemy ships can be engaged by friendly mines
         % REMOVE END
 
-        boundary_box = [0 0 2 5];
+        boundary_box
         boundary_x = 0 % Boundary x - lower left corner of the mine fields operating area
         boundary_y = 0 % Boundary y - lower left corner (y)
         boundary_width = 2 % Boundary width
@@ -53,23 +54,29 @@ classdef SEMinefield < handle
                 for n=1:obj.number_of_mines
                     obj.mines(n).setAxesHandle(axesHandle);
                 end
+                didSet = true;
             end
         end
 
-
-        function setBoundaryBox(obj, boundaryBox)
+        function didSet = setBoundaryBox(obj, boundaryBox)
+            didSet = false;
             if numel(boundaryBox) == 4
                 obj.boundary_box = boundaryBox;
                 obj.boundary_x  = boundaryBox(1);
                 obj.boundary_y  = boundaryBox(2);
                 obj.boundary_width  = boundaryBox(3);
                 obj.boundary_height  = boundaryBox(4);
+                didSet = true;
             end
         end
 
-        function setNumMines(obj, num_mines)
-            obj.number_of_mines = num_mines;
-            obj.resetInitalize();
+        function didSet = setNumMines(obj, num_mines)
+            didSet = false;
+            if nargin>=1 && ~isempty(num_mines) && num_mines>=0
+                obj.number_of_mines = num_mines;
+                obj.resetInitalize();
+                didSet = true;
+            end
         end
 
         function num = getNumUnexplodedMines(obj)
@@ -79,19 +86,34 @@ classdef SEMinefield < handle
             end               
         end
 
-        function setLayout(obj, minefieldLayout)
+        function distributeMines(obj)
+            obj.setLayout();
+        end
+
+        % Leave blank to refresh the layout
+        function didSet = setLayout(obj, minefieldLayout)
+            didSet = false;
+            if nargin < 2 || isempty(minefieldLayout)
+                minefieldLayout = obj.layout;
+            end
 
             if any(strcmpi(minefieldLayout, obj.POSSIBLE_LAYOUTS))
+                obj.layout = minefieldLayout;
+                didSet = true;
 
                 switch lower(minefieldLayout)
+                    case 'uniform'
+                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
                     case 'rand'
                         % Create the positions for your mines and then set
                         % them
-                        xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        warning('Using uniform distribution');
+                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        % xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                         
                     % FUTURE - implement other layouts
-                    % case 'randn'
-                        % xyCoords = getRandnDistributedPositions()
+                    case 'randn'
+                        SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
 
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
@@ -140,9 +162,10 @@ classdef SEMinefield < handle
             isIt = nargin>1 && ~isempty(mineIndex) && mineIndex > 0 && mineIndex <= obj.number_of_mines;
         end
 
-        function setDxDy(obj, mineIndex, dx, dy)
+        function didSet = setDxDy(obj, mineIndex, dx, dy)
+            didSet = false;
             if obj.isValidIndex(mineIndex)
-                obj.mines(mineIndex).setDxDy(dx, dy);
+                didSet = obj.mines(mineIndex).setDxDy(dx, dy);
             end
         end
         
@@ -212,11 +235,18 @@ classdef SEMinefield < handle
     end
 
     methods(Static)
+        function getDistributedPostions(numItems, boundarBox, distributionTag)
+            switch lower(distributionTag)
+
+
+            end
+        end
+
         % QUERY - there may be a logic error or corner case where not every item
-        % is guaranteed to be assigned a position. - 
+        % is guaranteed to be assigned a position. 
         % TODO - submit a ticket and place on the backlog to investigate
         % later.
-        function xyCoords = getRandomlyUniformDistributedPositions(numItems, boundaryBox)
+        function xyCoords = getUniformlyDistributedPositions(numItems, boundaryBox)
             boundary_x = boundaryBox(1);
             boundary_y = boundaryBox(2);
             width = boundaryBox(3);
@@ -269,5 +299,60 @@ classdef SEMinefield < handle
                 end
             end
         end
+
+        function xyCoords = getRandomlyGaussianDistributedPositions(numItems, boundaryBox)
+            boundary_x = boundaryBox(1);
+            boundary_y = boundaryBox(2);
+            width = boundaryBox(3);
+            height = boundaryBox(4);
+            % Distributes objects within a specified boundary according to
+            % a gaussian/normal distribution
+            %
+            % Inputs:
+            %   numItems - Number of objects to distribute
+            %   boundary_x - X-coordinate of the boundary's top-left corner
+            %   boundary_y - Y-coordinate of the boundary's top-left corner
+            %   width - Width of the boundary
+            %   height - Height of the boundary
+            %
+            % Outputs:
+            %   xyCoords - numItems x 2 matrix of x, y coordinates for each
+            %   item randomly distributed across the boundary box
+            
+            
+            % Calculate the number of rows and columns for a roughly square grid
+            numRows = ceil(sqrt(numItems));
+            numCols = ceil(numItems / numRows);
+
+            % Calculate the spacing between objects
+            if numRows > 1
+                rowSpacing = height / (numRows - 1);
+            else
+                rowSpacing = height;
+            end
+            
+            if numCols > 1
+                colSpacing = width / (numCols - 1);
+            else
+                colSpacing = width;
+            end
+
+            % Initialize coordinates vectors
+            xyCoords = nan(numItems, 2);
+            
+            % Generate the coordinates
+            index = 1;
+            for row = 0:numRows-1
+                for col = 0:numCols-1
+                    if index > numItems
+                        break;
+                    end
+                    x = boundary_x + col * colSpacing;
+                    y = boundary_y + row * rowSpacing;
+                    xyCoords(index,:) = [x, y];
+                    index = index + 1;
+                end
+            end
+        end        
     end
 end

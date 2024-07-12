@@ -1,4 +1,10 @@
 classdef SEMine < handle
+    events
+        Armed
+        Disarmed
+        Exploded
+    end
+
     properties
         pos_x
         pos_y
@@ -13,10 +19,6 @@ classdef SEMine < handle
         armed = false % (T/F)
         alive = true % (T/F)
     end
-
-    events
-        Explosion
-    end
     
     methods
         function obj = SEMine(position_x, position_y, axisHandle)
@@ -28,6 +30,12 @@ classdef SEMine < handle
             end
         end
 
+        function delete(obj)
+            if ~isempty(obj.graphic_h) && isvalid(obj.graphic_h)
+                delete(obj.graphic_h);
+            end
+            delete@handle(obj);
+        end
 
         % Can  be used to assign an axes handle for the mine to be renderd
         % on.  If the mine handle does not exist, it will be created.
@@ -84,11 +92,8 @@ classdef SEMine < handle
             obj.updateDisplay();
         end 
         
-        % TODO - talk with @hyatt about what is going on here
-        function setDxDy(obj, dx, dy)
-            % Passthrough from SEMinefield to set the mine's position change
-            obj.pos_x = obj.pos_x + dx;
-            obj.pos_y = obj.pos_y + dy;
+        function didSet = setDxDy(obj, dx, dy)
+            didSet = false;
         end
         
         function didSet = setPosition(obj, x, y)
@@ -135,18 +140,9 @@ classdef SEMine < handle
         end
         
         function armedStatus = isArmed(obj)
-            % Determine status of armed
             armedStatus = obj.armed;
         end
         
-
-        % TODO - discuss with @hyatt - this likely should not be a method or if it is, it should be three methods.        
-        function armDisarm(obj, ship_x, ship_y)
-            % Change status of armed to disarmed if friendly ship is within damage range
-            if obj.isInRange(ship_x, ship_y)
-                obj.armed = false;
-            end
-        end
     end
 end
 
