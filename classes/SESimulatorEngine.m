@@ -62,7 +62,7 @@ classdef SESimulatorEngine < handle
         % Available ships include those that have not been sunk
         % and that have yet to transit through the minefield
         function num = getNumShipsAvailable(obj)
-
+            num = obj.fleet.getNumShipsRemaining();
         end
 
         function num = getNumUnsunkShips(obj)

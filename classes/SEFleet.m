@@ -61,18 +61,6 @@ classdef SEFleet < handle
                 obj.ships(shipIdx).updateDisplay();
             end
         end
-
-        % num is the number of ships that have not been sunk
-        % and have not yet transited out of the minefield
-        function num = getNumShipsRemaining(obj)
-            status = obj.getStatus();
-            num = status.numRemaining;
-
-        end
-
-        function num = getNumUnsunkShips(obj)
-            num = obj.getNumAlive();
-        end
         
         %sets bounds
         function didSet = setBoundaryBox(obj, bounds)
@@ -213,14 +201,6 @@ classdef SEFleet < handle
             %if ship dies, update
         %end
 
-        % Method to get the number of ships that are still operational
-        function numAlive = getNumAlive(obj)
-            numAlive = 0;
-            for n = 1:obj.numShips                
-                numAlive = numAlive + obj.ships(n).isAlive();                
-            end
-        end
-
         function status = getStatus(obj)
             status = struct('numAlive',0,...
                 'numSuccess', 0, ...
@@ -237,10 +217,28 @@ classdef SEFleet < handle
             status.numSunk = obj.numShips - status.numAlive;
         end
 
-        function num = getNumShipsLeftToTransit(obj)
+        % num is the number of ships that have not been sunk
+        % and have not yet transited out of the minefield
+        function num = getNumShipsRemaining(obj)
             status = obj.getStatus();
             num = status.numRemaining;
-            
+        end
+
+        function num = getNumUnsunkShips(obj)
+            num = obj.getNumAlive();
+        end
+
+        % Method to get the number of ships that are still operational
+        function numAlive = getNumAlive(obj)
+            numAlive = 0;
+            for n = 1:obj.numShips                
+                numAlive = numAlive + obj.ships(n).isAlive();                
+            end
+        end        
+
+        function num = getNumShipsLeftToTransit(obj)
+            status = obj.getStatus();
+            num = status.numRemaining;            
         end
 
     end
