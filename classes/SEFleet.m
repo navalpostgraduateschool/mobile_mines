@@ -65,7 +65,8 @@ classdef SEFleet < handle
         % num is the number of ships that have not been sunk
         % and have not yet transited out of the minefield
         function num = getNumShipsRemaining(obj)
-            num = 0;
+            status = obj.getStatus();
+            num = status.numRemaining;
 
         end
 
@@ -227,8 +228,11 @@ classdef SEFleet < handle
                 'numRemaining', 0, ...
                 'numTransiting', 0);
             for n = 1:obj.numShips
-                status.numAlive = status.numAlive + obj.ships(n).isAlive();
-                status.numSunk = status.numAlive + obj.ships(n).isAlive();
+                stillAlive = obj.ships(n).isAlive();
+                inBounds = obj.ships(n).pos_y <= (obj.operatingBoundary(2)+obj.operatingBoundary(4));
+                status.numRemaining = status.numRemaining+ (stillAlive && inBounds);
+                status.numAlive = status.numAlive + stillAlive;
+                status.numSunk = status.numAlive + ~obj.ships(n).isAlive();
             end
             status.numSunk = obj.numShips - status.numAlive;
         end
@@ -236,6 +240,7 @@ classdef SEFleet < handle
         function num = getNumShipsLeftToTransit(obj)
             status = obj.getStatus();
             num = status.numRemaining;
+            
         end
 
     end
