@@ -1,4 +1,10 @@
 classdef SEMine < handle
+    events
+        Armed
+        Disarmed
+        Exploded
+    end
+
     properties
         pos_x
         pos_y
@@ -6,16 +12,13 @@ classdef SEMine < handle
         damageRange = 250 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
-        face_color = 'black';
+        face_color = [1 0.5 0.5];
+        marker = 'hexagram'
     end
 
     properties (SetAccess = protected)
         armed = false % (T/F)
         alive = true % (T/F)
-    end
-
-    events
-        Explosion
     end
     
     methods
@@ -23,23 +26,29 @@ classdef SEMine < handle
             if nargin > 0
                 obj.setPosition(position_x, position_y); % setPosition does not exist in the code anywhere but here
                 if nargin > 2
-                    obj.graphic_h = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
-                        obj.pos_y,'marker','*');
-
                     obj.initDisplay(axisHandle);
                 end
             end
         end
 
-        end
+        function delete(obj)
+            % deleteHandles is a custom function.
+            deleteHandles(obj.graphic_h);
 
+            % This is the superclass method for delete the object, which we
+            % need to specifiy explicitly since we have overloaded the
+            % method.
+            delete@handle(obj);
+        end
 
         % Can  be used to assign an axes handle for the mine to be renderd
         % on.  If the mine handle does not exist, it will be created.
         function initDisplay(obj, axes_handle_in)
-            if ~ishandle(obj.graphic_h)
+            if isempty(obj.graphic_h) || ~ishandle(obj.graphic_h)
                 obj.graphic_h = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
-                        obj.pos_y,'marker','*');
+                        obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color,...
+                        'markeredgecolor','k',...
+                        'markersize',2);
                 % You can do something like this too
                 % this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
             end
@@ -50,18 +59,13 @@ classdef SEMine < handle
         end
 
         function setAxesHandle(obj, axes_handle_in)
-                        if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
+            if nargin>1 && ishandle(axes_handle_in)
+                obj.axes_h = axes_handle_in;
+            end
+            if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
                 set(obj.graphic_h,'parent',obj.axes_h);
             end
-
-            if ishandle(axes_handle_in)
-                obj.axes_h = axes_handle_in;
-                obj.item_h.Parent = axes_handle_in;
-                obj.heading_h.Parent = axes_handle_in;
-                obj.updateDisplay();
-            else
-                disp('Something is wrong in the setAxesHandle function')
-            end
+            obj.updateDisplay();
         end
 
 
@@ -71,8 +75,15 @@ classdef SEMine < handle
         %        there are a few ways that are all valid
         function updateDisplay(obj)
             if ishandle(obj.graphic_h)
-                
+                if obj.isAlive
+                    visibility = 'on';
+                else
+                    visibility = 'off';
+                end
 
+                set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
+                    obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
+                    'markersize',10, 'visible',visibility);
             end
         end
 
@@ -85,11 +96,8 @@ classdef SEMine < handle
             obj.updateDisplay();
         end 
         
-        % TODO - talk with @hyatt about what is going on here
-        function setDxDy(obj, dx, dy)
-            % Passthrough from SEMinefield to set the mine's position change
-            obj.pos_x = obj.pos_x + dx;
-            obj.pos_y = obj.pos_y + dy;
+        function didSet = setDxDy(obj, dx, dy)
+            didSet = false;
         end
         
         function didSet = setPosition(obj, x, y)
@@ -98,7 +106,6 @@ classdef SEMine < handle
             obj.pos_y = y;
             didSet = true;
         end
-
         
         function detected = hasDetected(obj, ship_x, ship_y)
             % Determine if a ship is within detection range
@@ -106,10 +113,10 @@ classdef SEMine < handle
             detected = (distance <= obj.detectRange);
         end
         
-        function detonation(obj)
+        function explode(obj)
             % Broadcast explosion event and kills mine
+            obj.notify('Exploded');
             obj.alive = false;
-            % Add code to broadcast explosion event
         end
         
         function [inRange, distance] = isInDetectionRange(obj, xyPosToCheck)
@@ -129,28 +136,14 @@ classdef SEMine < handle
             inRange = distance <= obj.(rangeParameter);
         end
 
-        
         function aliveStatus = isAlive(obj)
             % Determine status of alive
             aliveStatus = obj.alive;
         end
         
         function armedStatus = isArmed(obj)
-            % Determine status of armed
             armedStatus = obj.armed;
         end
-        
 
-        % TODO - discuss with @hyatt - this likely should not be a method or if it is, it should be three methods.        
-        function armDisarm(obj, ship_x, ship_y)
-            % Change status of armed to disarmed if friendly ship is within damage range
-            if obj.isInRange(ship_x, ship_y)
-                obj.armed = false;
-            end
-        end
     end
 end
-
-
-
-

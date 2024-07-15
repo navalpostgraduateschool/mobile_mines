@@ -13,6 +13,7 @@ classdef SEMine < handle
         axes_h;
         graphic_h;
         face_color = [1 0.5 0.5];
+        marker = 'hexagram'
     end
 
     properties (SetAccess = protected)
@@ -45,7 +46,7 @@ classdef SEMine < handle
         function initDisplay(obj, axes_handle_in)
             if isempty(obj.graphic_h) || ~ishandle(obj.graphic_h)
                 obj.graphic_h = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
-                        obj.pos_y,'marker','*','markerfacecolor',obj.face_color,...
+                        obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color,...
                         'markeredgecolor','k',...
                         'markersize',2);
                 % You can do something like this too
@@ -81,7 +82,7 @@ classdef SEMine < handle
                 end
 
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
-                    obj.pos_y,'marker','hexagram','markerfacecolor',obj.face_color, ...
+                    obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
                     'markersize',10, 'visible',visibility);
             end
         end
