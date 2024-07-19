@@ -13,7 +13,13 @@ classdef SEMine < handle
         axes_h;
         graphic_h;
         face_color = [1 0.5 0.5];
-        marker = 'hexagram'
+        marker = 'hexagram';
+   
+        detRangeGraphic;
+        explosion = 'o';
+        explosionSize = 30;
+        explosionColor = 'none';
+
     end
 
     properties (SetAccess = protected)
@@ -34,6 +40,9 @@ classdef SEMine < handle
         function delete(obj)
             % deleteHandles is a custom function.
             deleteHandles(obj.graphic_h);
+            %NEW
+            deleteHandles(obj.detRangeGraphic);
+
 
             % This is the superclass method for delete the object, which we
             % need to specifiy explicitly since we have overloaded the
@@ -49,6 +58,12 @@ classdef SEMine < handle
                         obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color,...
                         'markeredgecolor','k',...
                         'markersize',2);
+                %NEW
+                obj.detRangeGraphic = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
+                        obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor,...
+                        'markeredgecolor','k',...
+                        'markersize', obj.explosionSize);
+
                 % You can do something like this too
                 % this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
             end
@@ -63,7 +78,12 @@ classdef SEMine < handle
                 obj.axes_h = axes_handle_in;
             end
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
+                
+                %NEW
+                set(obj.detRangeGraphic,'parent',obj.axes_h);
+                
                 set(obj.graphic_h,'parent',obj.axes_h);
+                
             end
             obj.updateDisplay();
         end
@@ -84,6 +104,12 @@ classdef SEMine < handle
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
                     'markersize',10, 'visible',visibility);
+
+                %NEW
+                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', ...
+                    obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor, ...
+                    'markersize',obj.explosionSize, 'visible',visibility);
+
             end
         end
 
