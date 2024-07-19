@@ -15,7 +15,7 @@ classdef (Abstract) SEMine < handle
         face_color = [1 0.5 0.5];
         marker = 'hexagram'
 
-        detRangeGraphic;
+        detRangeGraphic; %shows damageRange in red circle around mine
     end
 
     properties (SetAccess = protected)
@@ -57,10 +57,7 @@ classdef (Abstract) SEMine < handle
                 obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1, 0, 0], 'markersize', obj.damageRange);
             end
             
-            % %mycode
-            % if obj.alive == true
-            %     obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', obj.marker, 'markeredgecolor', 'red', 'markersize', 5);
-            % end
+            
 
 
             if nargin > 1
@@ -74,7 +71,7 @@ classdef (Abstract) SEMine < handle
             end
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
                 set(obj.graphic_h,'parent',obj.axes_h);
-                %my code
+                
                 set(obj.detRangeGraphic, 'parent', obj.axes_h);
             end
             obj.updateDisplay();
@@ -158,7 +155,7 @@ classdef (Abstract) SEMine < handle
         
         function armedStatus = isArmed(obj)
             armedStatus = obj.armed;
-            %set(obj.detRangeGraphic, 'markerfacecolor', obj.face_color, 'xdata', obj, )
+            
         end
 
     end
