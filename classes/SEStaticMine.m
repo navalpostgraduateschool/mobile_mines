@@ -1,14 +1,14 @@
-classdef SEMobileMine < SEMine
+classdef SEStaticMine < SEMine
     properties
         dx = 0;
         dy = 0;
     end
     
     methods
-        function obj = SEMobileMine(varargin)
+        function obj = SEStaticMine(varargin)
             % pass everything to the base class
             obj@SEMine(varargin{:});
-            obj.marker = '*';
+            obj.marker = 'o';
         end
         
         function updatePosSmart(obj, ship_x, ship_y)

@@ -14,6 +14,8 @@ classdef SEMine < handle
         graphic_h;
         face_color = [1 0.5 0.5];
         marker = 'hexagram'
+
+        detRangeGraphic;
     end
 
     properties (SetAccess = protected)
@@ -50,8 +52,15 @@ classdef SEMine < handle
                         'markeredgecolor','k',...
                         'markersize',2);
                 % You can do something like this too
-                % this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
+                %this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
+                obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1, 0, 0], 'markersize', obj.damageRange);
             end
+            
+            % %mycode
+            % if obj.alive == true
+            %     obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', obj.marker, 'markeredgecolor', 'red', 'markersize', 5);
+            % end
+
 
             if nargin > 1
                 obj.setAxesHandle(axes_handle_in);
@@ -64,6 +73,8 @@ classdef SEMine < handle
             end
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
                 set(obj.graphic_h,'parent',obj.axes_h);
+                %my code
+                set(obj.detRangeGraphic, 'parent', obj.axes_h);
             end
             obj.updateDisplay();
         end
@@ -84,6 +95,9 @@ classdef SEMine < handle
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
                     'markersize',10, 'visible',visibility);
+
+                %mycode
+                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1 0 0], 'markersize', 100, 'visible', visibility);
             end
         end
 
@@ -143,6 +157,7 @@ classdef SEMine < handle
         
         function armedStatus = isArmed(obj)
             armedStatus = obj.armed;
+            %set(obj.detRangeGraphic, 'markerfacecolor', obj.face_color, 'xdata', obj, )
         end
 
     end

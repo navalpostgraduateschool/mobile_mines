@@ -1,4 +1,4 @@
-classdef SEMine < handle
+classdef (Abstract) SEMine < handle
     events
         Armed
         Disarmed
@@ -9,11 +9,13 @@ classdef SEMine < handle
         pos_x
         pos_y
         detectRange = 10000 % The radius range around a mine that can detect enemy ships
-        damageRange = 250 % The radius range that enemy ships can be engaged by friendly mines
+        damageRange = 100%250 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
         face_color = [1 0.5 0.5];
         marker = 'hexagram'
+
+        detRangeGraphic;
     end
 
     properties (SetAccess = protected)
@@ -38,7 +40,8 @@ classdef SEMine < handle
             % This is the superclass method for delete the object, which we
             % need to specifiy explicitly since we have overloaded the
             % method.
-            delete@handle(obj);
+            delete@handle(obj.detRangeGraphic);
+            
         end
 
         % Can  be used to assign an axes handle for the mine to be renderd
@@ -50,8 +53,15 @@ classdef SEMine < handle
                         'markeredgecolor','k',...
                         'markersize',2);
                 % You can do something like this too
-                % this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
+                %this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
+                obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1, 0, 0], 'markersize', obj.damageRange);
             end
+            
+            % %mycode
+            % if obj.alive == true
+            %     obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', obj.marker, 'markeredgecolor', 'red', 'markersize', 5);
+            % end
+
 
             if nargin > 1
                 obj.setAxesHandle(axes_handle_in);
@@ -64,6 +74,8 @@ classdef SEMine < handle
             end
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
                 set(obj.graphic_h,'parent',obj.axes_h);
+                %my code
+                set(obj.detRangeGraphic, 'parent', obj.axes_h);
             end
             obj.updateDisplay();
         end
@@ -84,6 +96,9 @@ classdef SEMine < handle
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
                     'markersize',10, 'visible',visibility);
+
+                %mycode
+                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1 0 0], 'markersize', obj.damageRange, 'visible', visibility);
             end
         end
 
@@ -143,6 +158,7 @@ classdef SEMine < handle
         
         function armedStatus = isArmed(obj)
             armedStatus = obj.armed;
+            %set(obj.detRangeGraphic, 'markerfacecolor', obj.face_color, 'xdata', obj, )
         end
 
     end
