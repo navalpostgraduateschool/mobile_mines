@@ -43,6 +43,11 @@ classdef SEMinefield < handle
             end
         end
 
+        %NEW CODE 
+        function mineBehavior(obj, setMineBehavior)
+            didset = false;
+        end
+
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
             narginchk(0,4);

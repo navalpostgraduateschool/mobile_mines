@@ -44,8 +44,9 @@ classdef SEMinefield < handle
         end
 
         %NEW CODE 
-
-        function 
+        function mineBehavior(obj, setMineBehavior)
+            didset = false;
+        end
 
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
@@ -155,7 +156,7 @@ classdef SEMinefield < handle
                 case 'mobile'
                     mineClass = @SEMobileMine;
                 case 'static'
-                    mineClass = @SEMine; % CHANGE WHEN SABRINA IS DONE
+                    mineClass = @SEStaticMine; % CHANGE WHEN KAIYA IS DONE
                 otherwise
                     warning('Unrecognized mine type ''%s'', mobile mines will be used', obj.mineType);
                     mineClass = @SEMobileMine;
