@@ -157,6 +157,21 @@ classdef (Abstract) SEMine < handle
             armedStatus = obj.armed;
             
         end
+        
 
+        function distance = getDistance(obj, x, y)
+            mx = obj.pos_x;
+            my = obj.pos_y;
+            lx = x; %location
+            ly = y;
+            
+            a = abs(mx-lx);
+            b = abs(my-ly);
+
+            a = power(a, 2);
+            b = power(b, 2);
+
+            distance = sqrt(a+b);
+        end
     end
 end
