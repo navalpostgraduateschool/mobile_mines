@@ -131,19 +131,23 @@ classdef SEMinefield < handle
                         % them
                         warning('Using uniform distribution');
                         xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-                        % xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                         
                     % FUTURE - implement other layouts
                     case 'randn'
-                        SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
-
+                        xyCoords = obj.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
+   
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                 end
 
+
+                w = 0.2;
+
                 for mineIndex=1:obj.number_of_mines
                     minePosition = xyCoords(mineIndex, :);
+                    minePosition = minePosition + (rand(1, 2) - 0.5) * w;
                     obj.setPosition(mineIndex, minePosition);
                 end
                 obj.refreshDisplay();

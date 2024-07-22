@@ -1,4 +1,4 @@
-classdef SESimulatorEngine < handle
+    classdef SESimulatorEngine < handle
     events
         SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
         SimCompleted; % monte carlo simulations consist of a number of simulations;
