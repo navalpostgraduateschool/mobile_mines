@@ -1,4 +1,4 @@
-clc, clearvars, close all;
+dclc, clearvars, close all;
 
 
 

@@ -25,6 +25,8 @@ classdef SESimulatorEngine < handle
         maxSimulationSteps = 50;
     end
     
+    %obj.mineField.setMineType(value) %to call to setMineType method?
+
     methods
         function obj = SESimulatorEngine(boundary_box, axes_handle)
             narginchk(0, 2);
@@ -167,8 +169,12 @@ classdef SESimulatorEngine < handle
                 obj.minefield.setdetectRange(obj.minedetectRange);
                 didSet = true;
             end
-        end        
-        
+        end
+
+        function setMineType(obj, mineType)
+            obj.minefield.setMineType(mineType);
+        end
+
         function didSet = setNumShips(obj, numShips)
             didSet = false;
             if nargin>1 && ~isempty(numShips) && numShips>= 0
