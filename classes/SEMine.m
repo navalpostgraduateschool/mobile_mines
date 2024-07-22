@@ -1,4 +1,4 @@
-classdef (Abstract) SEMine < handle
+classdef SEMine < handle
     events
         Armed
         Disarmed
@@ -9,11 +9,16 @@ classdef (Abstract) SEMine < handle
         pos_x
         pos_y
         detectRange = 10000 % The radius range around a mine that can detect enemy ships
-        damageRange = 100%250 % The radius range that enemy ships can be engaged by friendly mines
+        damageRange = 250 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
         face_color = [1 0.5 0.5];
-        marker = 'hexagram'
+        marker = 'hexagram';
+   
+        
+        explosion = 'o';
+        explosionSize = 30;
+        explosionColor = 'none';
 
         damageRangeGraphic; %shows damageRange in red circle around mine
     end
@@ -36,6 +41,9 @@ classdef (Abstract) SEMine < handle
         function delete(obj)
             % deleteHandles is a custom function.
             deleteHandles(obj.graphic_h);
+            %NEW
+            deleteHandles(obj.detRangeGraphic);
+
 
             % This is the superclass method for delete the object, which we
             % need to specifiy explicitly since we have overloaded the
@@ -59,6 +67,9 @@ classdef (Abstract) SEMine < handle
             
             
 
+                % You can do something like this too
+                % this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
+            end
 
             if nargin > 1
                 obj.setAxesHandle(axes_handle_in);
@@ -70,6 +81,10 @@ classdef (Abstract) SEMine < handle
                 obj.axes_h = axes_handle_in;
             end
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
+                
+                %NEW
+                set(obj.detRangeGraphic,'parent',obj.axes_h);
+                
                 set(obj.graphic_h,'parent',obj.axes_h);
                 
                 set(obj.damageRangeGraphic, 'parent', obj.axes_h);
@@ -155,7 +170,6 @@ classdef (Abstract) SEMine < handle
         
         function armedStatus = isArmed(obj)
             armedStatus = obj.armed;
-            
         end
         
 

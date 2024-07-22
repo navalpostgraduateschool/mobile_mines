@@ -3,6 +3,7 @@ classdef SEMinefield < handle
         LAYOUTS = {'uniform','rand','randn','se4003_delux','derez_distribution'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
         MINE_TYPES = {'mobile','static'};
+
     end
 
     properties
@@ -24,6 +25,9 @@ classdef SEMinefield < handle
         boundary_y = 0 % Boundary y - lower left corner (y)
         boundary_width = 2 % Boundary width
         boundary_height = 5 % Boundary height
+
+        
+
     end
 
     properties(SetAccess=protected)
@@ -37,6 +41,11 @@ classdef SEMinefield < handle
                 obj.mineType = lower(mineType);
                 obj.reset();
             end
+        end
+
+        %NEW CODE 
+        function mineBehavior(obj, setMineBehavior)
+            didset = false;
         end
 
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
@@ -147,7 +156,7 @@ classdef SEMinefield < handle
                 case 'mobile'
                     mineClass = @SEMobileMine;
                 case 'static'
-                    mineClass = @SEMine;
+                    mineClass = @SEStaticMine; % CHANGE WHEN KAIYA IS DONE
                 otherwise
                     warning('Unrecognized mine type ''%s'', mobile mines will be used', obj.mineType);
                     mineClass = @SEMobileMine;
@@ -380,3 +389,6 @@ classdef SEMinefield < handle
         end        
     end
 end
+
+
+

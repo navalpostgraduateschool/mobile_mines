@@ -61,6 +61,12 @@ classdef SEFleet < handle
                 obj.ships(shipIdx).updateDisplay();
             end
         end
+
+        function displayShipHeadings(obj, shouldDisplay)
+            for n=1:obj.numShips
+                obj.ships(n).showPath(shouldDisplay);
+            end
+        end
         
         %sets bounds
         function didSet = setBoundaryBox(obj, bounds)

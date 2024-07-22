@@ -1,7 +1,7 @@
 close all
 clear all
 
-dx = 1
+dx = 0.5
 
 l = plot([10,5,20,30,-5])
 l.Color = ['red']
