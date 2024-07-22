@@ -19,6 +19,8 @@ classdef SESimulatorEngine < handle
         maxSimulationSteps = 50;
     end
     
+    %obj.mineField.setMineType(value) %to call to setMineType method?
+
     methods
         function obj = SESimulatorEngine(boundary_box, axes_handle)
             narginchk(0, 2);

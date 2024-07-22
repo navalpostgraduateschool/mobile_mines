@@ -6,15 +6,23 @@ classdef SEMine < handle
     end
 
     properties
-        pos_x
-        pos_y
+        pos_x;
+        pos_y;
         detectRange = 10000 % The radius range around a mine that can detect enemy ships
-        damageRange = 250 % The radius range that enemy ships can be engaged by friendly mines
+        damageRange = 70 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
+        detonation_h;
         face_color = [1 0.5 0.5];
-        marker = 'hexagram'
+        marker = 'hexagram';
+   
+        detRangeGraphic;
+        explosion = 'o';
+        explosionSize = 30;
+        explosionColor = 'none';
+
     end
+
 
     properties (SetAccess = protected)
         armed = false % (T/F)
@@ -34,6 +42,13 @@ classdef SEMine < handle
         function delete(obj)
             % deleteHandles is a custom function.
             deleteHandles(obj.graphic_h);
+%<<<<<<< HEAD
+            deleteHandles(obj.detonation_h);
+%=======
+            %NEW
+            deleteHandles(obj.detRangeGraphic);
+
+%>>>>>>> 1c44047ecbdf3358424afaae22ae7357865f8ecd
 
             % This is the superclass method for delete the object, which we
             % need to specifiy explicitly since we have overloaded the
@@ -49,6 +64,19 @@ classdef SEMine < handle
                         obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color,...
                         'markeredgecolor','k',...
                         'markersize',2);
+%<<<<<<< HEAD
+                 obj.detonation_h = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
+                        obj.pos_y,'marker','o',...
+                        'markeredgecolor','blue',...
+                        'markersize',obj.damageRange);
+%=======
+                %NEW
+                %obj.detRangeGraphic = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
+                        %obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor,...
+                        %'markeredgecolor','k',...
+                        %'markersize', obj.explosionSize);
+
+%>>>>>>> 1c44047ecbdf3358424afaae22ae7357865f8ecd
                 % You can do something like this too
                 % this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
             end
@@ -63,7 +91,16 @@ classdef SEMine < handle
                 obj.axes_h = axes_handle_in;
             end
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
+                
+                %NEW
+                set(obj.detRangeGraphic,'parent',obj.axes_h);
+                
                 set(obj.graphic_h,'parent',obj.axes_h);
+%<<<<<<< HEAD
+                set(obj.detonation_h,'parent',obj.axes_h);
+%=======
+                
+%>>>>>>> 1c44047ecbdf3358424afaae22ae7357865f8ecd
             end
             obj.updateDisplay();
         end
@@ -84,6 +121,18 @@ classdef SEMine < handle
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
                     'markersize',10, 'visible',visibility);
+%<<<<<<< HEAD
+                set(obj.detonation_h, 'xdata', obj.pos_x, 'ydata', ...
+                    obj.pos_y,'visible',visibility);
+                     
+%=======
+
+                %NEW
+                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', ...
+                    obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor, ...
+                    'markersize',obj.explosionSize, 'visible',visibility);
+
+%>>>>>>> 1c44047ecbdf3358424afaae22ae7357865f8ecd
             end
         end
 
