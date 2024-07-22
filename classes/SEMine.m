@@ -15,7 +15,7 @@ classdef (Abstract) SEMine < handle
         face_color = [1 0.5 0.5];
         marker = 'hexagram'
 
-        detRangeGraphic; %shows damageRange in red circle around mine
+        damageRangeGraphic; %shows damageRange in red circle around mine
     end
 
     properties (SetAccess = protected)
@@ -40,7 +40,7 @@ classdef (Abstract) SEMine < handle
             % This is the superclass method for delete the object, which we
             % need to specifiy explicitly since we have overloaded the
             % method.
-            delete@handle(obj.detRangeGraphic);
+            delete@handle(obj.damageRangeGraphic);
             
         end
 
@@ -54,7 +54,7 @@ classdef (Abstract) SEMine < handle
                         'markersize',2);
                 % You can do something like this too
                 %this.item_handle = rectangle('Position',[obj.position_x obj.position_y  1 1],'Curvature',[1 1])
-                obj.detRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1, 0, 0], 'markersize', obj.damageRange);
+                obj.damageRangeGraphic = line('parent', [], 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1, 0, 0], 'markersize', obj.damageRange);
             end
             
             
@@ -72,7 +72,7 @@ classdef (Abstract) SEMine < handle
             if ishandle(obj.graphic_h) && ishandle(obj.axes_h)
                 set(obj.graphic_h,'parent',obj.axes_h);
                 
-                set(obj.detRangeGraphic, 'parent', obj.axes_h);
+                set(obj.damageRangeGraphic, 'parent', obj.axes_h);
             end
             obj.updateDisplay();
         end
@@ -95,7 +95,7 @@ classdef (Abstract) SEMine < handle
                     'markersize',10, 'visible',visibility);
 
                 %mycode
-                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1 0 0], 'markersize', obj.damageRange, 'visible', visibility);
+                set(obj.damageRangeGraphic, 'xdata', obj.pos_x, 'ydata', obj.pos_y, 'marker', 'o', 'markeredgecolor', [1 0 0], 'markersize', obj.damageRange, 'visible', visibility);
             end
         end
 
