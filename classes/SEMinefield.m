@@ -43,10 +43,6 @@ classdef SEMinefield < handle
             end
         end
 
-        %NEW CODE 
-
-        function 
-
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
             narginchk(0,4);
@@ -224,7 +220,6 @@ classdef SEMinefield < handle
             % Event broadcast logic can be added here
         end
         
-
         function [inRange, distance] = isInDamageRange(obj, mineIndex, pos_x, pos_y)
             inRange = false;
             if obj.isValidIndex(mineIndex)

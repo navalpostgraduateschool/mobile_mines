@@ -1,4 +1,10 @@
 classdef SESimulatorEngine < handle
+    events
+        SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
+        SimCompleted; % monte carlo simulations consist of a number of simulations;
+        MonteCarloFinished% 
+    end
+
     properties(SetAccess=protected)
         fleet % SEFleet object
         minefield % SEMinefield object
@@ -82,8 +88,11 @@ classdef SESimulatorEngine < handle
                 obj.reset();
                 while ~obj.simulationDone()
                     obj.update();
+                    obj.notify('SimUpdated');
                 end
+                obj.notify('SimCompleted');
             end
+            obj.notify('MonteCarloFinished');
         end
 
         function isDone = simulationDone(obj)
@@ -191,13 +200,12 @@ classdef SESimulatorEngine < handle
             obj.fleet.updatePosition();
         end
         
-
         function detectMineDetonations(obj)
-            for i = 1:obj.getNumShips()
-                % ship = obj.fleet.graphicsHandle.Ships(i);
-                % if obj.minefield.isInDamageRange(ship.PositionX, ship.PositionY)
-                %     obj.minefield.mineExplosion(i);
-                % end
+            for shipIdx = 1:obj.getNumShips()
+                [ship, isValid] = obj.fleet.getShip(shipIdx);
+                if isValid
+                    app.minefield.checkShip(ship);  % handle the ship
+                end
             end
         end        
 
