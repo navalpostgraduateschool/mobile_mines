@@ -53,6 +53,10 @@ classdef SESimulatorEngine < handle
             obj.curSimulationStep = 0;
         end
 
+        function displayShipHeadings(obj, shouldDisplay)
+            obj.fleet.displayShipHeadings(shouldDisplay);
+        end
+
         function num = getNumShips(obj)
             num = obj.fleet.numShips;
         end
