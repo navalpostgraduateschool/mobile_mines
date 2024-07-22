@@ -26,6 +26,8 @@ classdef SEMinefield < handle
         boundary_width = 2 % Boundary width
         boundary_height = 5 % Boundary height
 
+        
+
     end
 
     properties(SetAccess=protected)
