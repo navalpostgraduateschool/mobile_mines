@@ -58,6 +58,7 @@ classdef SEFleet < handle
             for shipIdx = 1:obj.numShips
                 obj.ships(shipIdx).updateDisplay();
             end
+            %obj.ships(shipIdx).updateDisplay();
         end
 
         function displayShipHeadings(obj, shouldDisplay)

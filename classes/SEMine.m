@@ -8,8 +8,8 @@ classdef SEMine < handle
     properties
         pos_x;
         pos_y;
-        detectRange = 10000 % The radius range around a mine that can detect enemy ships
-        damageRange = 70 % The radius range that enemy ships can be engaged by friendly mines
+        detectRange = 2 % The radius range around a mine that can detect enemy ships
+        damageRange = 0.25 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
         detonation_h;
@@ -67,7 +67,7 @@ classdef SEMine < handle
                 obj.detRangeGraphic = line('parent',[], 'xdata', obj.pos_x, 'ydata', ...
                         obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor,...
                         'markeredgecolor','k',...
-                        'markersize', obj.explosionSize);
+                        'markersize', obj.detectRange);
             end
 
             if nargin > 1
@@ -92,10 +92,13 @@ classdef SEMine < handle
 
         function updateDisplay(obj)
             if ishandle(obj.graphic_h)
+               
+                
                 if obj.isAlive
                     visibility = 'on';
                 else
-                    visibility = 'off';
+                    %visibility = 'off';
+                    obj.marker = 'x';
                 end
 
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
