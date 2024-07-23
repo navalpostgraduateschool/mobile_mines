@@ -90,7 +90,7 @@ classdef SEShip<handle
                 cur_heading = cur_heading + 360;
             end
             % cur_heading = atand(x(obj.end_x-obj.pos_x)/(obj.end_y-obj.pos_y));
-            % obj.heading_deg = cur_heading;
+            obj.heading_deg = cur_heading;
         end
 
         function isIt = isAlive(obj)
