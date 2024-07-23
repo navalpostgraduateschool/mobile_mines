@@ -211,12 +211,12 @@
         end
         
         function detectMineDetonations(obj)
-            for shipIdx = 1:obj.getNumShips()
-                [ship, isValid] = obj.fleet.getShip(shipIdx);
-                if isValid
-                    app.minefield.checkShip(ship);  % handle the ship
-                end
-            end
+            % for shipIdx = 1:obj.getNumShips()
+            %     [ship, isValid] = obj.fleet.getShip(shipIdx);
+            %     if isValid
+            %         app.minefield.checkShip(ship);  % handle the ship
+            %     end
+            % end
         end        
 
         function changeFleetBehavior(obj, newBehavior)
