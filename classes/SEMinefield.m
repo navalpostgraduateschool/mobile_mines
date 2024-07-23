@@ -35,18 +35,6 @@ classdef SEMinefield < handle
     end
     
     methods
-        function didSet = setMineType(obj, mineType)
-            didSet = false;
-            if any(strcmpi(mineType,obj.MINE_TYPES))
-                obj.mineType = lower(mineType);
-                obj.reset();
-            end
-        end
-
-        %NEW CODE 
-        function mineBehavior(obj, setMineBehavior)
-            didset = false;
-        end
 
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
@@ -100,6 +88,15 @@ classdef SEMinefield < handle
                 didSet = true;
             end
         end
+
+        function didSet = setMineType(obj, mineType)
+            didSet = false;
+            if any(strcmpi(mineType,obj.MINE_TYPES))
+                obj.mineType = lower(mineType);
+                obj.reset();
+            end
+        end
+
 
         function num = getNumUnexplodedMines(obj)
             num = 0;
@@ -205,14 +202,31 @@ classdef SEMinefield < handle
                 didSet = obj.mines(mineIndex).setDxDy(dx, dy);
             end
         end
+
+
+        function [inDamageRange, inDetectionRange, distances] = getMineRanges(obj, shipObj)
+            inDamageRange = false(obj.number_of_mines,1);
+            inDetectionRange = false(obj.number_of_mines,1);
+            distances = inf(size(inDamageRange));
+
+            shipPosition = [shipObj.pos_x, shipObj.pos_y];
+            for mineIdx=1:obj.number_of_mines
+                if obj.isValidIndex(mineIdx)
+                    [inDamageRange(mineIdx), inDetectionRange(mineIdx), distances(mineIdx)] = obj.mines(mineIdx).getRangesToShip(shipPosition);
+                end
+            end
+        end
+
         
         function [detected, distance] = hasDetected(obj, mineIndex, shipPosition)
             detected = false;
             distance = inf;
-            if isValidIndex(mineIndex)
+            if obj.isValidIndex(mineIndex)
                 [detected, distance]  = obj.mines(mineIndex).inDetectionRange(shipPosition);
             end
         end
+
+
         
         function refreshDisplay(obj)
             for n=1:obj.number_of_mines

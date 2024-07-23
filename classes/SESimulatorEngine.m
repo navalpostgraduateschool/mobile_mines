@@ -1,4 +1,4 @@
-    classdef SESimulatorEngine < handle
+classdef SESimulatorEngine < handle
     events
         SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
         SimCompleted; % monte carlo simulations consist of a number of simulations;
@@ -211,18 +211,30 @@
         end
         
         function detectMineDetonations(obj)
-            % for shipIdx = 1:obj.getNumShips()
-            %     [ship, isValid] = obj.fleet.getShip(shipIdx);
-            %     if isValid
-            %         app.minefield.checkShip(ship);  % handle the ship
-            %     end
-            % end
+            minesExploded = false(obj.getNumMines,1);
+            for shipIdx = 1:obj.getNumShips()
+                [ship, isValid] = obj.fleet.getShip(shipIdx);
+                if isValid
+                    [inMinesDamageRange, inMinesDetectionRange, distances] = obj.minefield.getMineRanges(ship);
+
+                    if any(inMinesDamageRange)
+                        minesExploded(inMinesDamageRange) = true;
+                        ship.sink();
+                    end
+                end
+            end
+
+            if any(minesExploded)
+                mineIdx = find(minesExploded);
+                for n=1:numel(mineIdx)
+                    obj.minefield.mines( mineIdx(n)).explode();
+                end
+            end
         end        
 
         function changeFleetBehavior(obj, newBehavior)
             obj.fleet.changeBehavior(newBehavior);
         end
-
 
         % 7.1 **Transit Success Rate**:
         %   - Percentage of ships that successfully transit through the minefield.

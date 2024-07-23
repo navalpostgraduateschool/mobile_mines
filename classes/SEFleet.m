@@ -42,8 +42,6 @@ classdef SEFleet < handle
             % end
         end
 
-        
-
         %axes sync
         function didSet = setAxesHandle(obj, axesHandle)
             didSet = false;
@@ -181,44 +179,25 @@ classdef SEFleet < handle
             end
         end
 
-        % TODO - talk with @hyatt about this method and where to utilize it
-        % in the class
-        % Method to update the position of the fleet
-        function updatePositions(obj)
-            % Assuming each ship has a method to update its position
-            for i = 1:obj.numShips
-                % TODO - discuss misconception here
-                obj.ships(i).updatePosition();
-                obj.axesHandle.Ships(i).updatePosition(newPosition);
-            end
-
-            % TODO - are these below comments a todo for yourself?  Let's discuss if it is a
-            % remaining todo or just left over and can be removed
-            % pull heading and speed from ship info, use that to update
-            % position every xx frames
+        
+        function inBounds = isShipInBounds(obj, idx)
+            inBounds = obj.ships(idx).pos_y <= (obj.operatingBoundary(2)+obj.operatingBoundary(4));
         end
 
-        % Method to update the priority of the fleet
-        %function updatePriority(obj, newPriority)
-            % Assuming each ship has a priority attribute
-            %for i = 1:obj.numShips
-                %obj.graphicsHandle.Ships(i).Priority = newPriority;
-            %end
-            %if ship dies, update
-        %end
-
-        function status = getStatus(obj)
+        function [status, isShipValid] = getStatus(obj)
             status = struct('numAlive',0,...
                 'numSuccess', 0, ...
                 'numSunk', 0,...
                 'numRemaining', 0, ...
                 'numTransiting', 0);
+            isShipValid = false(obj.numShips, 1);
             for n = 1:obj.numShips
                 stillAlive = obj.ships(n).isAlive();
-                inBounds = obj.ships(n).pos_y <= (obj.operatingBoundary(2)+obj.operatingBoundary(4));
-                status.numRemaining = status.numRemaining+ (stillAlive && inBounds);
+                inBounds = obj.isShipInBounds(n);
+                isShipValid(n) = stillAlive && inBounds;
+                status.numRemaining = status.numRemaining+ isShipValid(n);
                 status.numAlive = status.numAlive + stillAlive;
-                status.numSunk = status.numAlive + ~obj.ships(n).isAlive();
+                status.numSunk = status.numSunk + ~stillAlive;
             end
             status.numSunk = obj.numShips - status.numAlive;
         end
@@ -240,7 +219,17 @@ classdef SEFleet < handle
             for n = 1:obj.numShips                
                 numAlive = numAlive + obj.ships(n).isAlive();                
             end
-        end        
+        end
+
+        function [ship, isValid] = getShip(obj, idx)
+            isValid = false;
+            ship = [];
+            if idx>0 && idx<= obj.numShips
+                ship = obj.ships(idx);
+                inBounds = obj.isShipInBounds(idx);
+                isValid = ship.isAlive && inBounds;
+            end
+        end
 
         function num = getNumShipsLeftToTransit(obj)
             status = obj.getStatus();

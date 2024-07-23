@@ -161,6 +161,14 @@ classdef SEMine < handle
             inRange = distance <= obj.(rangeParameter);
         end
 
+        function [inDamageRange, inDetectionRange, rangeToShip] = getRangesToShip(obj, shipPosition)
+            ship_x = shipPosition(1);
+            ship_y = shipPosition(2);
+            rangeToShip = sqrt((obj.pos_x - ship_x)^2 + (obj.pos_y - ship_y)^2);
+            inDamageRange = rangeToShip <= obj.damageRange;
+            inDetectionRange = rangeToShip <= obj.detectRange;
+        end
+
         function aliveStatus = isAlive(obj)
             % Determine status of alive
             aliveStatus = obj.alive;
