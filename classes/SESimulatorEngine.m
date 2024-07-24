@@ -212,10 +212,10 @@ classdef SESimulatorEngine < handle
         
         function detectMineDetonations(obj)
             for shipIdx = 1:obj.getNumShips()
-                [ship, isValid] = obj.fleet.getShip(shipIdx);
-                if isValid
-                    app.minefield.checkShip(ship);  % handle the ship
-                end
+                %[ship, isValid] = obj.fleet.getShip(shipIdx);
+                %if isValid
+                %    app.minefield.checkShip(ship);  % handle the ship
+                %end
             end
         end        
 
