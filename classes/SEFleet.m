@@ -186,8 +186,14 @@ end
             xCenters = repmat(opX+opWidth/2, obj.numShips, 1);
 
             yStarts = repmat(opY, obj.numShips,1);
-            yEnds = opHeight+ yStarts;
-            yStarts = yStarts - 0.1*opHeight*(0:obj.numShips-1)';
+
+            % push our ending position out a bit beyond the rest of the
+            % boundary so we do not get stuck at the end going back and
+            % forth
+            yEnds = 1.25*opHeight+yStarts;
+
+            % String out our ships starting positions
+            yStarts = yStarts - 0.5*opHeight*(0:obj.numShips-1)';  
             xRandStarts = opX+rand(obj.numShips,1)*opWidth;
             xRandEnds = opX+rand(obj.numShips,1)*opWidth;
             
