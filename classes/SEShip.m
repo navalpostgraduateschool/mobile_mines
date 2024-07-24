@@ -90,7 +90,7 @@ classdef SEShip<handle
                 cur_heading = cur_heading + 360;
             end
             % cur_heading = atand(x(obj.end_x-obj.pos_x)/(obj.end_y-obj.pos_y));
-            % obj.heading_deg = cur_heading;
+            obj.heading_deg = cur_heading;
         end
 
         function isIt = isAlive(obj)
@@ -113,7 +113,7 @@ classdef SEShip<handle
         end
 
         function updatePosition(obj)
-            updateHeading(obj);
+           
 
             % Conversion
             time_multiplier = 10; % Speed up the simulation by this factor
@@ -169,11 +169,13 @@ classdef SEShip<handle
         end
 
         function updateDisplay(obj)
-            if obj.alive
-                visibility = 'on';
-            else
-                visibility = 'off';
-            end
+            visibility = 'on';
+            % if obj.alive
+            %     visibility = 'on';
+            % else
+            %     visibility = 'on';
+            %     %obj.
+            % end
 
             if ishandle(obj.graphic_h)
                 set(obj.graphic_h,'markerfacecolor',obj.face_color,'xdata',obj.pos_x,'ydata',obj.pos_y, ...

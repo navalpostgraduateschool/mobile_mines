@@ -35,18 +35,6 @@ classdef SEMinefield < handle
     end
     
     methods
-        function didSet = setMineType(obj, mineType)
-            didSet = false;
-            if any(strcmpi(mineType,obj.MINE_TYPES))
-                obj.mineType = lower(mineType);
-                obj.reset();
-            end
-        end
-
-        %NEW CODE 
-        function mineBehavior(obj, setMineBehavior)
-            didset = false;
-        end
 
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
@@ -101,6 +89,15 @@ classdef SEMinefield < handle
             end
         end
 
+        function didSet = setMineType(obj, mineType)
+            didSet = false;
+            if any(strcmpi(mineType,obj.MINE_TYPES))
+                obj.mineType = lower(mineType);
+                obj.reset();
+            end
+        end
+
+
         function num = getNumUnexplodedMines(obj)
             num = 0;
             for m=1:obj.number_of_mines
@@ -131,19 +128,23 @@ classdef SEMinefield < handle
                         % them
                         warning('Using uniform distribution');
                         xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-                        % xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                         
                     % FUTURE - implement other layouts
                     case 'randn'
-                        SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
-
+                        xyCoords = obj.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
+   
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                 end
 
+
+                w = 0.2;
+
                 for mineIndex=1:obj.number_of_mines
                     minePosition = xyCoords(mineIndex, :);
+                    minePosition = minePosition + (rand(1, 2) - 0.5) * w;
                     obj.setPosition(mineIndex, minePosition);
                 end
                 obj.refreshDisplay();
@@ -201,14 +202,31 @@ classdef SEMinefield < handle
                 didSet = obj.mines(mineIndex).setDxDy(dx, dy);
             end
         end
+
+
+        function [inDamageRange, inDetectionRange, distances] = getMineRanges(obj, shipObj)
+            inDamageRange = false(obj.number_of_mines,1);
+            inDetectionRange = false(obj.number_of_mines,1);
+            distances = inf(size(inDamageRange));
+
+            shipPosition = [shipObj.pos_x, shipObj.pos_y];
+            for mineIdx=1:obj.number_of_mines
+                if obj.isValidIndex(mineIdx)
+                    [inDamageRange(mineIdx), inDetectionRange(mineIdx), distances(mineIdx)] = obj.mines(mineIdx).getRangesToShip(shipPosition);
+                end
+            end
+        end
+
         
         function [detected, distance] = hasDetected(obj, mineIndex, shipPosition)
             detected = false;
             distance = inf;
-            if isValidIndex(mineIndex)
+            if obj.isValidIndex(mineIndex)
                 [detected, distance]  = obj.mines(mineIndex).inDetectionRange(shipPosition);
             end
         end
+
+
         
         function refreshDisplay(obj)
             for n=1:obj.number_of_mines
