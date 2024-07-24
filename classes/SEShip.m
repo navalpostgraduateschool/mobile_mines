@@ -113,7 +113,7 @@ classdef SEShip<handle
         end
 
         function updatePosition(obj)
-            updateHeading(obj);
+           
 
             % Conversion
             time_multiplier = 10; % Speed up the simulation by this factor
@@ -169,22 +169,19 @@ classdef SEShip<handle
         end
 
         function updateDisplay(obj)
+            visibility = 'on';
             if obj.alive
-                visibility = 'on';
+                shipColor = obj.face_color;
+                shipMarker = 'd';
             else
-                visibility = 'on';
-                %set(obj.heading_h,linestyle','--');
-                %obj.linestyle = '-';
-                %obj.heading_h = line('parent',[],'linestyle',' ','color','w');
-                obj.face_color = [1 0 0];
-                %obj.graphic_h = 'o';
-                %obj.graphic_h.linestyle = ' ';
+                shipColor = [1 0 0];
+                shipMarker = 'v';                
             end
 
             if ishandle(obj.graphic_h)
-                set(obj.graphic_h,'markerfacecolor',obj.face_color,'xdata',obj.pos_x,'ydata',obj.pos_y, ...
+                set(obj.graphic_h,'marker',shipMarker,'markerfacecolor',shipColor, ...
+                    'xdata',obj.pos_x,'ydata',obj.pos_y, ...
                     'visible',visibility);
-                
             end
             if ishandle(obj.heading_h)
                 xVec = [obj.pos_x, obj.end_x];
