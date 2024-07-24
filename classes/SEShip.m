@@ -113,7 +113,7 @@ classdef SEShip<handle
         end
 
         function updatePosition(obj)
-            updateHeading(obj);
+           
 
             % Conversion
             time_multiplier = 10; % Speed up the simulation by this factor
@@ -172,7 +172,8 @@ classdef SEShip<handle
             if obj.alive
                 visibility = 'on';
             else
-                visibility = 'off';
+                visibility = 'on';
+                %obj.
             end
 
             if ishandle(obj.graphic_h)

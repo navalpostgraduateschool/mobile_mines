@@ -97,7 +97,7 @@ classdef SEMine < handle
                 if obj.isAlive
                     visibility = 'on';
                 else
-                    %visibility = 'off';
+                    visibility = 'off';
                     obj.marker = 'x';
                 end
 
