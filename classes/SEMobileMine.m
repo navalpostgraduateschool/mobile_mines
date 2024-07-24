@@ -8,7 +8,7 @@ classdef SEMobileMine < SEMine
         function obj = SEMobileMine(varargin)
             % pass everything to the base class
             obj@SEMine(varargin{:});
-            obj.marker = '*';
+            obj.marker = 'pentagram';
         end
         
         function updatePosSmart(obj, ship_x, ship_y)
