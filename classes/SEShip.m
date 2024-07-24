@@ -101,20 +101,20 @@ classdef SEShip<handle
             obj.alive = true;
         end
 
-        % QUERY - Should we call update display after sinking a ship?
         function sink(obj)
             obj.alive = false;
-        end
-
-        function update(obj)
-            obj.updateHeading();
-            obj.updatePosition();
             obj.updateDisplay();
         end
 
-        function updatePosition(obj)
-           
+        function update(obj)
+            if obj.isAlive()
+                obj.updateHeading();
+                obj.updatePosition();
+                obj.updateDisplay();
+            end
+        end
 
+        function updatePosition(obj)
             % Conversion
             time_multiplier = 10; % Speed up the simulation by this factor
             nm_per_second = (obj.speed_nmh / 3600) * time_multiplier; 
@@ -131,12 +131,6 @@ classdef SEShip<handle
             obj.pos_x = obj.pos_x + distance_per_frame*dx;
             obj.pos_y = obj.pos_y + distance_per_frame*dy;
 
-            % % Updating position
-            % x_pos = x_pos + distance_per_frame * dx;
-            % y_pos = y_pos + distance_per_frame * dy;
-
-            % obj.pos_x = obj.pos_x + obj.time_step*obj.speed_nmh*sind(obj.heading_deg);
-            % obj.pos_y = obj.pos_y + obj.time_step*obj.speed_nmh*cosd(obj.heading_deg);      
         end
 
         function showPath(obj, shouldShow)
