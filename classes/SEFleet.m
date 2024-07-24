@@ -56,9 +56,10 @@ classdef SEFleet < handle
         %refreshes the display
         function refreshDisplay(obj)
             for shipIdx = 1:obj.numShips
-                obj.ships(shipIdx).updateDisplay();
+                if obj.ships(shipIdx).alive
+                    obj.ships(shipIdx).updateDisplay();
+                end
             end
-            %obj.ships(shipIdx).updateDisplay();
         end
 
         function displayShipHeadings(obj, shouldDisplay)

@@ -97,13 +97,15 @@ classdef SEMine < handle
                 if obj.isAlive
                     visibility = 'on';
                 else
-                    %visibility = 'off';
+                    visibility = 'off';
                     obj.marker = 'x';
+                    obj.face_color = [1 0 0];
+                    %obj.detRangeGraphic.markersize = 0;
                 end
 
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
-                    'markersize',10, 'visible',visibility);
+                    'markersize',10, 'visible','on');
 
                 set(obj.detonation_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'visible',visibility);

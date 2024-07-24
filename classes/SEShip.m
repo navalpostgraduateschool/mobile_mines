@@ -172,18 +172,25 @@ classdef SEShip<handle
             if obj.alive
                 visibility = 'on';
             else
-                visibility = 'off';
+                visibility = 'on';
+                %set(obj.heading_h,linestyle','--');
+                %obj.linestyle = '-';
+                %obj.heading_h = line('parent',[],'linestyle',' ','color','w');
+                obj.face_color = [1 0 0];
+                %obj.graphic_h = 'o';
+                %obj.graphic_h.linestyle = ' ';
             end
 
             if ishandle(obj.graphic_h)
                 set(obj.graphic_h,'markerfacecolor',obj.face_color,'xdata',obj.pos_x,'ydata',obj.pos_y, ...
                     'visible',visibility);
+                
             end
             if ishandle(obj.heading_h)
                 xVec = [obj.pos_x, obj.end_x];
                 yVec = [obj.pos_y, obj.end_y];
 
-                if ~obj.showHeading
+                if ~obj.showHeading || ~obj.isAlive()
                     visibility = 'off';
                 end
                 set(obj.heading_h,'XData',xVec,'YData',yVec, 'visible',visibility, ...
