@@ -211,7 +211,7 @@ classdef SEMinefield < handle
 
             shipPosition = [shipObj.pos_x, shipObj.pos_y];
             for mineIdx=1:obj.number_of_mines
-                if obj.isValidIndex(mineIdx)
+                if obj.isValidIndex(mineIdx) && obj.mines(mineIdx).isAlive()
                     [inDamageRange(mineIdx), inDetectionRange(mineIdx), distances(mineIdx)] = obj.mines(mineIdx).getRangesToShip(shipPosition);
                 end
             end
