@@ -1,6 +1,6 @@
 classdef SEMinefield < handle
     properties(Constant)
-        LAYOUTS = {'uniform','rand','randn','se4003_delux','derez_distribution'}  % Possible layout
+        LAYOUTS = {'uniform','rand','randn'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
         MINE_TYPES = {'mobile','static'};
 
@@ -26,6 +26,7 @@ classdef SEMinefield < handle
         boundary_width = 2 % Boundary width
         boundary_height = 5 % Boundary height
 
+        minDistance = 15;
         
 
     end
@@ -126,14 +127,16 @@ classdef SEMinefield < handle
                     case 'rand'
                         % Create the positions for your mines and then set
                         % them
-                        warning('Using uniform distribution');
-                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-                        xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        
+                        %xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        xyCoords = SEMinefield.getRandomlyDistributedPositions2(obj.number_of_mines, obj.boundary_box, obj.minDistance);
+
                         
                     % FUTURE - implement other layouts
                     case 'randn'
-                        xyCoords = obj.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
-   
+                        %xyCoords = obj.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        xyCoords = SEMinefield.getRandomlyDistributedPositions1(obj.number_of_mines, obj.boundary_box);                       
+
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
@@ -211,25 +214,12 @@ classdef SEMinefield < handle
 
             shipPosition = [shipObj.pos_x, shipObj.pos_y];
             for mineIdx=1:obj.number_of_mines
-                if obj.isValidIndex(mineIdx)
+                if obj.isValidIndex(mineIdx) && obj.mines(mineIdx).isAlive()
                     [inDamageRange(mineIdx), inDetectionRange(mineIdx), distances(mineIdx)] = obj.mines(mineIdx).getRangesToShip(shipPosition);
                 end
             end
         end
 
-        function [isInRange, distances] = isShipInDamageRange(obj, shipObj)
-            isInRange = false(obj.number_of_mines,1);
-            distances = inf(size(isInRange));
-    
-
-            shipPosition = [shipObj.pos_x, shipObj.pos_y];
-            for mineIdx=1:obj.number_of_mines
-                if obj.isValidIndex(mineIdx)
-                    [isInRange(mineIdx), distances(mineIdx)] = obj.mines(mineIdx).isInDamageRange(shipPosition);
-                end
-            end
-
-        end
         
         function [detected, distance] = hasDetected(obj, mineIndex, shipPosition)
             detected = false;
@@ -364,6 +354,47 @@ classdef SEMinefield < handle
             end
         end
 
+        function xyCoords = getRandomlyDistributedPositions1(numItems, boundaryBox)
+            boundary_x = boundaryBox(1);
+            boundary_y = boundaryBox(2);
+            width = boundaryBox(3);
+            height = boundaryBox(4);
+
+            % Initialize coordinates matrix
+            xyCoords = nan(numItems, 2);
+
+            % Generate random coordinates
+            for index = 1:numItems
+                x = boundary_x + rand * width;  % Random x-coordinate within boundary
+                y = boundary_y + rand * height; % Random y-coordinate within boundary
+                xyCoords(index,:) = [x, y];
+            end
+        end
+
+
+        function xyCoords = getRandomlyDistributedPositions2(numItems, boundaryBox, minDistance)
+            boundary_x = boundaryBox(1);
+            boundary_y = boundaryBox(2);
+            width = boundaryBox(3);
+            height = boundaryBox(4);
+
+            % Initialize coordinates matrix
+            xyCoords = nan(numItems, 2);
+
+            % Generate random coordinates with minimum distance constraint
+            index = 1;
+            while index <= numItems
+                x = boundary_x + rand * width;  % Random x-coordinate within boundary
+                y = boundary_y + rand * height; % Random y-coordinate within boundary
+
+                % Check if the new position meets minimum distance requirement
+                if index == 1 || all(sqrt((xyCoords(1:index-1,1) - x).^2 + (xyCoords(1:index-1,2) - y).^2) >= obj.minDistance)
+                    xyCoords(index,:) = [x, y];
+                    index = index + 1;
+                end
+            end
+        end
+
         function xyCoords = getRandomlyGaussianDistributedPositions(numItems, boundaryBox)
             boundary_x = boundaryBox(1);
             boundary_y = boundaryBox(2);
@@ -420,6 +451,4 @@ classdef SEMinefield < handle
         end        
     end
 end
-
-
 
