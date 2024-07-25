@@ -82,7 +82,7 @@ classdef SESimulatorEngine < handle
 
         function run(obj, numSimulationsToRun)
             if nargin<2 || isempty(numSimulationsToRun) || numSimulationsToRun < 0
-                numSimulationsToRun = 1;
+                numSimulationsToRun = obj.numSimulations;
             end
 
             % make sure we aren't dealing with rational/decimal numbers
