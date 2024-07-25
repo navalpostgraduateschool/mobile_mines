@@ -28,6 +28,12 @@ classdef SESimulatorEngine < handle
     %obj.mineField.setMineType(value) %to call to setMineType method?
 
     methods
+            
+
+         
+
+
+
         function obj = SESimulatorEngine(boundary_box, axes_handle)
             narginchk(0, 2);
 
@@ -121,6 +127,17 @@ classdef SESimulatorEngine < handle
         function didSet = setMinefieldBox(obj, minefield_box)
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
+
+
+
+        function didSet = setNumRuns(obj,numRuns)
+            didSet = false;
+            if numRuns >= 0
+                obj.numSimulations = numRuns; 
+                didSet = true;
+            end 
+        end
+
 
         function setAxesHandle(obj, axes_h)
             obj.fleet.setAxesHandle(axes_h);
