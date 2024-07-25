@@ -1,2 +1,6 @@
 shipsRemaining, shipsSunk, proportionShipsRemaining, minesRemaining, minesDetonated, proportionMinesRemaining
 0, 2,0.00,8,2,0.80
+0, 1,0.00,9,1,0.90
+0, 3,0.00,7,3,0.70
+1, 2,0.33,8,2,0.80
+0, 3,0.00,7,3,0.70

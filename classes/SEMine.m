@@ -92,19 +92,20 @@ classdef SEMine < handle
 
         function updateDisplay(obj)
             if ishandle(obj.graphic_h)
-               
-                
                 if obj.isAlive
+                    markerValue = obj.marker;
                     visibility = 'on';
+                    marker_face_color = obj.face_color;
+
                 else
                     visibility = 'off';
-                    obj.marker = 'x';
-                    obj.face_color = [1 0 0];
+                    markerValue = 'x';
+                    marker_face_color = [1 0 0];
                     %obj.detRangeGraphic.markersize = 0;
                 end
 
                 set(obj.graphic_h, 'xdata', obj.pos_x, 'ydata', ...
-                    obj.pos_y,'marker',obj.marker,'markerfacecolor',obj.face_color, ...
+                    obj.pos_y,'marker',markerValue,'markerfacecolor',marker_face_color, ...
                     'markersize',10, 'visible','on');
 
                 set(obj.detonation_h, 'xdata', obj.pos_x, 'ydata', ...
@@ -147,6 +148,7 @@ classdef SEMine < handle
             % Broadcast explosion event and kills mine
             obj.notify('Exploded');
             obj.alive = false;
+            obj.updateDisplay();
         end
         
         function [inRange, distance] = isInDetectionRange(obj, xyPosToCheck)
