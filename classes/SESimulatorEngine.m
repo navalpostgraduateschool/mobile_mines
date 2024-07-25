@@ -55,7 +55,7 @@ classdef SESimulatorEngine < handle
 
         % Reset the simulation for the current configuration
         function reset(obj)
-            rng(obj.curSimulation); % seed randomizer for repeatability
+            %rng(obj.curSimulation); % seed randomizer for repeatability
             obj.fleet.reset();
             obj.minefield.reset();
             obj.curSimulationStep = 0;
