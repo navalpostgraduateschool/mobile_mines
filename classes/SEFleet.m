@@ -1,9 +1,7 @@
 classdef SEFleet < handle
     properties (Constant)
         %Possible fleet pathing behaviors
-        BEHAVIORS={'Will Kamikaze','Kamikaze','Random_Start_Point','Random_End_Point','Rand_Start_Rand_End'}; 
-       
-
+        BEHAVIORS={'Will Kamikaze','Kamikaze','Random_Start_Point','Random_End_Point','Rand_Start_Rand_End'};
     end
 
     properties
@@ -15,7 +13,6 @@ classdef SEFleet < handle
         startPos;
         endPos;
         activeShipIndex; % keeps track of which speed
-
     end    
     
     methods
