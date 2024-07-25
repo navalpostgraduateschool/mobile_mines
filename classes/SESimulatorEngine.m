@@ -191,6 +191,10 @@ classdef SESimulatorEngine < handle
                 didSet = obj.fleet.setNumShips(numShips);
             end
         end
+
+        function setAnimate(obj, shouldAnimate)
+            obj.animate = shouldAnimate;
+        end
      
 
         % TODO - talk with @hyatt about the updateFleetPosition method and
