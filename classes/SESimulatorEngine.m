@@ -1,4 +1,10 @@
 classdef SESimulatorEngine < handle
+    events
+        SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
+        SimCompleted; % monte carlo simulations consist of a number of simulations;
+        MonteCarloFinished% 
+    end
+
     properties(SetAccess=protected)
         fleet % SEFleet object
         minefield % SEMinefield object
@@ -20,6 +26,7 @@ classdef SESimulatorEngine < handle
     end
     
     methods
+
         function obj = SESimulatorEngine(boundary_box, axes_handle)
             narginchk(0, 2);
 
@@ -41,10 +48,14 @@ classdef SESimulatorEngine < handle
 
         % Reset the simulation for the current configuration
         function reset(obj)
-            rng(obj.curSimulation); % seed randomizer for repeatability
+            %rng(obj.curSimulation); % seed randomizer for repeatability
             obj.fleet.reset();
             obj.minefield.reset();
             obj.curSimulationStep = 0;
+        end
+
+        function displayShipHeadings(obj, shouldDisplay)
+            obj.fleet.displayShipHeadings(shouldDisplay);
         end
 
         function num = getNumShips(obj)
@@ -71,7 +82,7 @@ classdef SESimulatorEngine < handle
 
         function run(obj, numSimulationsToRun)
             if nargin<2 || isempty(numSimulationsToRun) || numSimulationsToRun < 0
-                numSimulationsToRun = 1;
+                numSimulationsToRun = obj.numSimulations;
             end
 
             % make sure we aren't dealing with rational/decimal numbers
@@ -82,8 +93,11 @@ classdef SESimulatorEngine < handle
                 obj.reset();
                 while ~obj.simulationDone()
                     obj.update();
+                    obj.notify('SimUpdated');
                 end
+                obj.notify('SimCompleted');
             end
+            obj.notify('MonteCarloFinished');
         end
 
         function isDone = simulationDone(obj)
@@ -106,6 +120,17 @@ classdef SESimulatorEngine < handle
         function didSet = setMinefieldBox(obj, minefield_box)
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
+
+
+
+        function didSet = setNumRuns(obj,numRuns)
+            didSet = false;
+            if numRuns >= 0
+                obj.numSimulations = numRuns; 
+                didSet = true;
+            end 
+        end
+
 
         function setAxesHandle(obj, axes_h)
             obj.fleet.setAxesHandle(axes_h);
@@ -154,13 +179,21 @@ classdef SESimulatorEngine < handle
                 obj.minefield.setdetectRange(obj.minedetectRange);
                 didSet = true;
             end
-        end        
-        
+        end
+
+        function setMineType(obj, mineType)
+            obj.minefield.setMineType(mineType);
+        end
+
         function didSet = setNumShips(obj, numShips)
             didSet = false;
             if nargin>1 && ~isempty(numShips) && numShips>= 0
                 didSet = obj.fleet.setNumShips(numShips);
             end
+        end
+
+        function setAnimate(obj, shouldAnimate)
+            obj.animate = shouldAnimate;
         end
      
 
@@ -191,20 +224,31 @@ classdef SESimulatorEngine < handle
             obj.fleet.updatePosition();
         end
         
-
         function detectMineDetonations(obj)
-            for i = 1:obj.getNumShips()
-                % ship = obj.fleet.graphicsHandle.Ships(i);
-                % if obj.minefield.isInDamageRange(ship.PositionX, ship.PositionY)
-                %     obj.minefield.mineExplosion(i);
-                % end
+            minesExploded = false(obj.getNumMines,1);
+            for shipIdx = 1:obj.getNumShips()
+                [ship, isValid] = obj.fleet.getShip(shipIdx);
+                if isValid
+                    [inMinesDamageRange, inMinesDetectionRange, distances] = obj.minefield.getMineRanges(ship);
+
+                    if any(inMinesDamageRange)
+                        minesExploded(inMinesDamageRange) = true;
+                        ship.sink();
+                    end
+                end
+            end
+
+            if any(minesExploded)
+                mineIdx = find(minesExploded);
+                for n=1:numel(mineIdx)
+                    obj.minefield.mines( mineIdx(n)).explode();
+                end
             end
         end        
 
         function changeFleetBehavior(obj, newBehavior)
             obj.fleet.changeBehavior(newBehavior);
         end
-
 
         % 7.1 **Transit Success Rate**:
         %   - Percentage of ships that successfully transit through the minefield.
