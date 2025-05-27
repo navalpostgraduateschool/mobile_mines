@@ -117,16 +117,31 @@ classdef SEMinefield < handle
                 switch lower(minefieldLayout)
                     case 'uniform'
                         xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                    
                     case 'rand'
-                        % Create the positions for your mines and then set
-                        % them
+                        xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        
+                    case 'randn'
+                        % Check how this is different from 'rand',
+                        % apparently one is randomly uniform and other is
+                        % randomly gaussian
                         warning('Using uniform distribution');
                         xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-                        % xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
-                        
-                    % FUTURE - implement other layouts
-                    case 'randn'
-                        SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        % xyCoords = SEMinefield.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
+
+                    case 'se4003_delux'
+                        % I don't know what the... this means, should have
+                        % a different function for SEMinefield, such as
+                        % getSE4003_deluxDistributedPositions
+                        warning('Using uniform distribution');
+                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
+
+                    case 'derez_distribution'
+                        % I don't know what the... this means, should have
+                        % a different function for SEMinefield, such as
+                        % getDerezDistributedPositions
+                        warning('Using uniform distribution');
+                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
 
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
@@ -299,7 +314,7 @@ classdef SEMinefield < handle
             else
                 rowSpacing = height;
             end
-            
+
             if numCols > 1
                 colSpacing = width / (numCols - 1);
             else
@@ -308,7 +323,7 @@ classdef SEMinefield < handle
 
             % Initialize coordinates vectors
             xyCoords = nan(numItems, 2);
-            
+
             % Generate the coordinates
             index = 1;
             for row = 0:numRows-1
@@ -322,6 +337,36 @@ classdef SEMinefield < handle
                     index = index + 1;
                 end
             end
+        end
+
+        function xyCoords = getRandomlyUniformDistributedPositions(numItems, boundaryBox)
+            boundary_x = boundaryBox(1);
+            boundary_y = boundaryBox(2);
+            width = boundaryBox(3);
+            height = boundaryBox(4);
+            % ChatGPT is ruling the world: Want realistic clustering? This function distributes a given number 
+            % of items inside a rectangular boundary using a Gaussian (normal) distribution. 
+            % Great for simulating natural groupings!
+            %
+            % non-ChatGPT note: natural grouping is hardly expected from a
+            % operational perspective, unless the mines are being
+            % thrown/droped from an airplane or launched from a gun. You
+            % got the idea...
+            %
+            % Inputs:
+            %   numItems   - Total number of items to place
+            %   boundary_x - X-coordinate of the top-left corner of the area
+            %   boundary_y - Y-coordinate of the top-left corner of the area
+            %   width      - Width of the bounding box
+            %   height     - Height of the bounding box
+            %
+            % Output:
+            %   xyCoords   - A numItems-by-2 matrix with the [x, y] coordinates of each item
+            %                positioned randomly but normally distributed within the box
+
+            xCoords = boundary_x + rand(numItems, 1) * width;
+            yCoords = boundary_y + rand(numItems, 1) * height;
+            xyCoords = [xCoords, yCoords];
         end
 
         function xyCoords = getRandomlyGaussianDistributedPositions(numItems, boundaryBox)
