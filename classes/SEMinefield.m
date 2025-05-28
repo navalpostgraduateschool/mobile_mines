@@ -1,6 +1,6 @@
 classdef SEMinefield < handle
     properties(Constant)
-        LAYOUTS = {'uniform','rand','randn','se4003_delux','derez_distribution'}  % Possible layout
+        LAYOUTS = {'uniform','rand','randn'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
         MINE_TYPES = {'mobile','static'};
     end
@@ -122,27 +122,10 @@ classdef SEMinefield < handle
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                         
                     case 'randn'
-                        % Check how this is different from 'rand',
-                        % apparently one is randomly uniform and other is
-                        % randomly gaussian
-                        warning('Using uniform distribution');
-                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-                        % xyCoords = SEMinefield.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                        xyCoords = SEMinefield.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
+                
 
-                    case 'se4003_delux'
-                        % I don't know what the... this means, should have
-                        % a different function for SEMinefield, such as
-                        % getSE4003_deluxDistributedPositions
-                        warning('Using uniform distribution');
-                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-
-                    case 'derez_distribution'
-                        % I don't know what the... this means, should have
-                        % a different function for SEMinefield, such as
-                        % getDerezDistributedPositions
-                        warning('Using uniform distribution');
-                        xyCoords = SEMinefield.getUniformlyDistributedPositions(obj.number_of_mines, obj.boundary_box);
-
+                   
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
@@ -370,58 +353,49 @@ classdef SEMinefield < handle
         end
 
         function xyCoords = getRandomlyGaussianDistributedPositions(numItems, boundaryBox)
+      
+            % Inputs:
+            %   numItems    - Number of points to generate
+            %   boundaryBox - Vector [boundary_x, boundary_y, width, height]
+            %
+            % Output:
+            %   xyCoords   - A numItems-by-2 matrix with the [x, y] coordinates of each item
+            %                positioned normally distributed within the box boundaries
+            %                and centered.
+        
             boundary_x = boundaryBox(1);
             boundary_y = boundaryBox(2);
             width = boundaryBox(3);
             height = boundaryBox(4);
-            % Distributes objects within a specified boundary according to
-            % a gaussian/normal distribution
-            %
-            % Inputs:
-            %   numItems - Number of objects to distribute
-            %   boundary_x - X-coordinate of the boundary's top-left corner
-            %   boundary_y - Y-coordinate of the boundary's top-left corner
-            %   width - Width of the boundary
-            %   height - Height of the boundary
-            %
-            % Outputs:
-            %   xyCoords - numItems x 2 matrix of x, y coordinates for each
-            %   item randomly distributed across the boundary box
-            
-            
-            % Calculate the number of rows and columns for a roughly square grid
-            numRows = ceil(sqrt(numItems));
-            numCols = ceil(numItems / numRows);
-
-            % Calculate the spacing between objects
-            if numRows > 1
-                rowSpacing = height / (numRows - 1);
-            else
-                rowSpacing = height;
-            end
-            
-            if numCols > 1
-                colSpacing = width / (numCols - 1);
-            else
-                colSpacing = width;
+        
+            center_x = boundary_x + width/2;
+            center_y = boundary_y + height/2;
+        
+            % Standard deviations for x and y (adjust to control spread)
+            sigma_x = width / 6;   % 99.7% points fall within ±3 sigma, so approx full width
+            sigma_y = height / 6;
+        
+            xyCoords = zeros(numItems, 2);
+            count = 0;
+        
+            while count < numItems
+                % Generate candidate points from normal distribution
+                x_candidate = center_x + sigma_x * randn(numItems * 2, 1);
+                y_candidate = center_y + sigma_y * randn(numItems * 2, 1);
+        
+                % Keep only points within boundaries
+                valid_idx = x_candidate >= boundary_x & x_candidate <= (boundary_x + width) & ...
+                            y_candidate >= boundary_y & y_candidate <= (boundary_y + height);
+        
+                valid_points = [x_candidate(valid_idx), y_candidate(valid_idx)];
+        
+                % Add to the output until we have enough points
+                num_to_add = min(numItems - count, size(valid_points, 1));
+                xyCoords(count + 1 : count + num_to_add, :) = valid_points(1:num_to_add, :);
+                count = count + num_to_add;
             end
 
-            % Initialize coordinates vectors
-            xyCoords = nan(numItems, 2);
-            
-            % Generate the coordinates
-            index = 1;
-            for row = 0:numRows-1
-                for col = 0:numCols-1
-                    if index > numItems
-                        break;
-                    end
-                    x = boundary_x + col * colSpacing;
-                    y = boundary_y + row * rowSpacing;
-                    xyCoords(index,:) = [x, y];
-                    index = index + 1;
-                end
-            end
+
         end        
     end
 end
