@@ -90,7 +90,7 @@ classdef SEShip<handle
                 cur_heading = cur_heading + 360;
             end
             % cur_heading = atand(x(obj.end_x-obj.pos_x)/(obj.end_y-obj.pos_y));
-            % obj.heading_deg = cur_heading;
+            obj.heading_deg = cur_heading;
         end
 
         function isIt = isAlive(obj)
@@ -113,13 +113,25 @@ classdef SEShip<handle
         end
 
         function updatePosition(obj)
-            updateHeading(obj);
+            
 
             % Conversion
             time_multiplier = 10; % Speed up the simulation by this factor
             nm_per_second = (obj.speed_nmh / 3600) * time_multiplier; 
             fps = 10;
             distance_per_frame = nm_per_second / fps;
+
+            dx_total = obj.end_x - obj.pos_x;
+            dy_total = obj.end_y - obj.pos_y;
+            remaining_distance = sqrt(dx_total^2 + dy_total^2);
+
+            stop_threshold = 0.1;
+
+            if remaining_distance <= stop_threshold
+                obj.pos_x = obj.end_x;
+                obj.pos_y = obj.end_y;
+                return;
+            end
 
             % Convert heading to radians
             heading_rad = obj.heading_deg * pi / 180;
