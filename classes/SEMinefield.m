@@ -1,6 +1,6 @@
 classdef SEMinefield < handle
     properties(Constant)
-        LAYOUTS = {'uniform','rand','randn'}  % Possible layout
+        LAYOUTS = {'uniform','rand','randn','uniform-e'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
         MINE_TYPES = {'mobile','static'};
     end
@@ -124,7 +124,8 @@ classdef SEMinefield < handle
                     case 'randn'
                         xyCoords = SEMinefield.getRandomlyGaussianDistributedPositions(obj.number_of_mines, obj.boundary_box);
                 
-
+                    case 'uniform-e'
+                        xyCoords = SEMinefield.getUniformlyDistributedPositionsWithError(obj.number_of_mines, obj.boundary_box);
                    
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
@@ -397,5 +398,57 @@ classdef SEMinefield < handle
 
 
         end        
+       
+        function xyCoords = getUniformlyDistributedPositionsWithError(numItems, boundaryBox, sigma)
+            % getUniformlyDistributedPositions distributes objects uniformly within a specified boundary
+            % and adds normally distributed error around the correct positions.
+            %
+            % Inputs:
+            %   numItems - Number of objects to distribute
+            %   boundaryBox - [x, y, width, height] of the boundary's top-left corner
+            %   sigma (optional) - Standard deviation of normal error (default: 1/number of mines, empiricaly defined)
+            %
+            % Outputs:
+            %   xyCoords - numItems x 2 matrix of x, y coordinates with normal noise added
+        
+            if nargin < 3
+                sigma = 1/numItems;  % Default standard deviation for normal error
+            end
+        
+            boundary_x = boundaryBox(1);
+            boundary_y = boundaryBox(2);
+            width = boundaryBox(3);
+            height = boundaryBox(4);
+        
+            % Calculate number of rows and columns for a roughly square grid
+            numRows = ceil(sqrt(numItems));
+            numCols = ceil(numItems / numRows);
+        
+            % Calculate the spacing between objects
+            rowSpacing = height / max(numRows - 1, 1);
+            colSpacing = width / max(numCols - 1, 1);
+        
+            % Initialize coordinates matrix
+            xyCoords = nan(numItems, 2);
+        
+            % Generate coordinates with added Gaussian error
+            index = 1;
+            for row = 0:numRows-1
+                for col = 0:numCols-1
+                    if index > numItems
+                        break;
+                    end
+                    x = boundary_x + col * colSpacing;
+                    y = boundary_y + row * rowSpacing;
+        
+                    % Add normally distributed noise to x and y
+                    errorX = sigma * randn();  % Gaussian noise
+                    errorY = sigma * randn();
+        
+                    xyCoords(index, :) = [x + errorX, y + errorY];
+                    index = index + 1;
+                end
+            end
+        end
     end
 end
