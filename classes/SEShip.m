@@ -13,6 +13,7 @@ classdef SEShip<handle
         end_y; % set end y position on 2D Grid
         time_step = 1; % arbitrary time unit; dt
         face_color = [0.5, 0.5, 0.5];
+        arrived = false;
     end
 
     properties(SetAccess=protected)
@@ -130,6 +131,7 @@ classdef SEShip<handle
             if remaining_distance <= stop_threshold
                 obj.pos_x = obj.end_x;
                 obj.pos_y = obj.end_y;
+                obj.arrived = true;
                 return;
             end
 
