@@ -21,6 +21,9 @@ This simulation tool models Unmanned Underwater Vehicle (UUV) fleets attempting 
 - **Trajectories**: Dash-dot lines.
 - Axis markings included.
 
+### Output Interface
+- **Simulation Status**: Indicates `Ready`, `Running` or the simulation results.
+
 ---
 
 ## Input Tabs
@@ -32,7 +35,6 @@ This simulation tool models Unmanned Underwater Vehicle (UUV) fleets attempting 
 - **Time Limit (s)**: Define max duration per simulation.
 - **Animate**: Checkbox to enable/disable animation.
 - **Start Button**: Runs the simulation (enabled when status is `Ready`).
-- **Simulation Status**: Indicates `Ready` or `Running`.
 
 ### 2. Fleet Tab
 ![Fleet Tab][def_2]
