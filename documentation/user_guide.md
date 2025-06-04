@@ -79,8 +79,8 @@ This simulation tool models Unmanned Underwater Vehicle (UUV) fleets attempting 
 ![Simulation Output][def_5]
 
 - A table displays:
-  - Number of remaining and destroyed UUVs.
-  - Number of destroyed mines.
+  - Number of remaining fleet units and mines.
+  - Number of destroyed fleet units and mines.
   - Percentage of surviving assets.
 
 ---
