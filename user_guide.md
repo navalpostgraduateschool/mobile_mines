@@ -1,4 +1,4 @@
-# UUV Minefield Simulation Software - User Guide
+# User Guide
 
 ## Overview
 
