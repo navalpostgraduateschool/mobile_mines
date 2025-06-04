@@ -64,5 +64,5 @@
 
 ## Acknowledgements
 
-- Thanks to all contributors for their feedback and support in improving the functionality and usability of the MATLAB Mobile Mines app.
+- Thanks to Dr. Moore for his feedback and support in improving the functionality and usability of the MATLAB Mobile Mines app.
 
