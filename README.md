@@ -26,3 +26,8 @@ Contributors to the project in 2025 include:
 * R. Walczak
 * A. da C. Canena
 * A. M. Avelar
+
+- [Find the user instructions here](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/documentation/user_guide.md)
+- [Find the developers notes here](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/documentation/dev_guide.md)
+- [Find the product page here](https://google.com)
+- [READY?! Install the program here!](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/MyAppInstaller.exe)
