@@ -5,7 +5,7 @@ A simulation tool for analyzing and developing mobile mine behaviors.
 
 - [User instructions](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/documentation/user_guide.md)
 - [Developer notes](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/documentation/dev_guide.md)
-- [Find the product page here](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/index.html)
+- [Find the product page here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/navalpostgraduateschool/mobile_mines/main/index.html)
 - [READY?! Install the program here!](https://github.com/navalpostgraduateschool/mobile_mines/blob/main/MineSimulatorInstaller.exe)
 
 
