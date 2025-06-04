@@ -87,8 +87,7 @@ This simulation tool models Unmanned Underwater Vehicle (UUV) fleets attempting 
 
 ## Notes
 
-- All layouts and positions are scaled to the grid display dimensions.
-- The interface dynamically updates based on the current simulation state.
+- All minefield layouts and positions are scaled to the grid display dimensions.
 - Exported/imported configurations must be valid JSON format.
 
 ---
