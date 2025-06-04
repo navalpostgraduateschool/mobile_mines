@@ -66,8 +66,8 @@ This simulation tool models Unmanned Underwater Vehicle (UUV) fleets attempting 
 ## Running the Simulation
 ![Simulation while running][def_4]
 
-1. Configure simulation, fleet, and minefield settings.
-2. Click **Start**.
+1. Configure the **Simulation**, **Fleet**, and **Minefield** tabs in any order.
+2. Once all required fields are set and the status is `Ready`, click **Start**.
 3. While `Running`, all inputs are disabled.
 4. Each run uses the same minefield configuration.
 5. Fleet behavior determines UUV start and end points.
