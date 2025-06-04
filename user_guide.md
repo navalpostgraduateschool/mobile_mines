@@ -32,7 +32,7 @@ This simulation tool models Unmanned Underwater Vehicle (UUV) fleets attempting 
 - **Time Limit (s)**: Define max duration per simulation.
 - **Animate**: Checkbox to enable/disable animation.
 - **Start Button**: Runs the simulation (enabled when status is `Ready`).
-- **Simulation Status**: Indicates `Ready`, `Running`, or `Finished`.
+- **Simulation Status**: Indicates `Ready` or `Running`.
 
 ### 2. Fleet Tab
 ![Fleet Tab][def_2]
