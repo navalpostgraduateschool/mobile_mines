@@ -202,19 +202,26 @@ classdef SEFleet < handle
         %end
 
         function status = getStatus(obj)
-            status = struct('numAlive',0,...
-                'numSuccess', 0, ...
-                'numSunk', 0,...
-                'numRemaining', 0, ...
-                'numTransiting', 0);
-            for n = 1:obj.numShips
-                stillAlive = obj.ships(n).isAlive();
-                inBounds = obj.ships(n).pos_y <= (obj.operatingBoundary(2)+obj.operatingBoundary(4));
-                status.numRemaining = status.numRemaining+ (stillAlive && inBounds);
-                status.numAlive = status.numAlive + stillAlive;
-                status.numSunk = status.numAlive + ~obj.ships(n).isAlive();
-            end
-            status.numSunk = obj.numShips - status.numAlive;
+            status = struct('numAlive', 0, ...
+                    'numSuccess', 0, ...
+                    'numSunk', 0, ...
+                    'numRemaining', 0, ...
+                    'numTransiting', 0);
+
+    for n = 1:obj.numShips
+        ship = obj.ships(n);
+        stillAlive = ship.isAlive();
+        hasArrived = isprop(ship, 'arrived') && ship.arrived;
+
+        if stillAlive && ~hasArrived
+            status.numRemaining = status.numRemaining + 1;
+        end
+
+        status.numAlive = status.numAlive + stillAlive;
+    end
+
+    status.numSunk = obj.numShips - status.numAlive;
+
         end
 
         % num is the number of ships that have not been sunk
