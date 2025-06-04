@@ -31,7 +31,7 @@ classdef SESimulatorEngine < handle
             % initialize as applicable based on the number of input arguments
             if nargin>0
                 obj.setBoundaryBox(boundary_box);
-                obk.setMinefieldBox(minefield_box);
+                obj.setMinefieldBox(minefield_box);
 
                 if nargin>1
                     obj.setAxesHandle(axes_handle);
