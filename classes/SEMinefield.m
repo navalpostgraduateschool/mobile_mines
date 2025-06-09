@@ -1,6 +1,6 @@
 classdef SEMinefield < handle
     properties(Constant)
-        LAYOUTS = {'uniform','rand','randn','uniform-e'}  % Possible layout
+        LAYOUTS = {'uniform','rand','randn','uniform-e','intership-2024'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
         MINE_TYPES = {'mobile','static'};
     end
@@ -24,6 +24,7 @@ classdef SEMinefield < handle
         boundary_y = 0 % Boundary y - lower left corner (y)
         boundary_width = 2 % Boundary width
         boundary_height = 5 % Boundary height
+
     end
 
     properties(SetAccess=protected)
@@ -31,13 +32,6 @@ classdef SEMinefield < handle
     end
     
     methods
-        function didSet = setMineType(obj, mineType)
-            didSet = false;
-            if any(strcmpi(mineType,obj.MINE_TYPES))
-                obj.mineType = lower(mineType);
-                obj.reset();
-            end
-        end
 
         function obj = SEMinefield(boundaryBox, numMines, mineLayout, axesHandle)
 
@@ -92,6 +86,15 @@ classdef SEMinefield < handle
             end
         end
 
+        function didSet = setMineType(obj, mineType)
+            didSet = false;
+            if any(strcmpi(mineType,obj.MINE_TYPES))
+                obj.mineType = lower(mineType);
+                obj.reset();
+            end
+        end
+
+
         function num = getNumUnexplodedMines(obj)
             num = 0;
             for m=1:obj.number_of_mines
@@ -127,13 +130,21 @@ classdef SEMinefield < handle
                     case 'uniform-e'
                         xyCoords = SEMinefield.getUniformlyDistributedPositionsWithError(obj.number_of_mines, obj.boundary_box);
                    
+                        % Left over from interns 2024 - maybe?
+                    case 'intership-2024'
+                        xyCoords = SEMinefield.getRandomlyDistributedPositions1(obj.number_of_mines, obj.boundary_box);
+
                     otherwise
                         warning('%s is not currently implemented - using random uniform distribution', minefieldLayout)
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                 end
 
+
+                w = 0.2;
+
                 for mineIndex=1:obj.number_of_mines
                     minePosition = xyCoords(mineIndex, :);
+                    minePosition = minePosition + (rand(1, 2) - 0.5) * w;
                     obj.setPosition(mineIndex, minePosition);
                 end
                 obj.refreshDisplay();
@@ -146,7 +157,7 @@ classdef SEMinefield < handle
                 case 'mobile'
                     mineClass = @SEMobileMine;
                 case 'static'
-                    mineClass = @SEMine;
+                    mineClass = @SEStaticMine; % CHANGE WHEN KAIYA IS DONE
                 otherwise
                     warning('Unrecognized mine type ''%s'', mobile mines will be used', obj.mineType);
                     mineClass = @SEMobileMine;
@@ -191,14 +202,31 @@ classdef SEMinefield < handle
                 didSet = obj.mines(mineIndex).setDxDy(dx, dy);
             end
         end
+
+
+        function [inDamageRange, inDetectionRange, distances] = getMineRanges(obj, shipObj)
+            inDamageRange = false(obj.number_of_mines,1);
+            inDetectionRange = false(obj.number_of_mines,1);
+            distances = inf(size(inDamageRange));
+
+            shipPosition = [shipObj.pos_x, shipObj.pos_y];
+            for mineIdx=1:obj.number_of_mines
+                if obj.isValidIndex(mineIdx) && obj.mines(mineIdx).isAlive()
+                    [inDamageRange(mineIdx), inDetectionRange(mineIdx), distances(mineIdx)] = obj.mines(mineIdx).getRangesToShip(shipPosition);
+                end
+            end
+        end
+
         
         function [detected, distance] = hasDetected(obj, mineIndex, shipPosition)
             detected = false;
             distance = inf;
-            if isValidIndex(mineIndex)
+            if obj.isValidIndex(mineIndex)
                 [detected, distance]  = obj.mines(mineIndex).inDetectionRange(shipPosition);
             end
         end
+
+
         
         function refreshDisplay(obj)
             for n=1:obj.number_of_mines
@@ -323,6 +351,7 @@ classdef SEMinefield < handle
             end
         end
 
+
         function xyCoords = getRandomlyUniformDistributedPositions(numItems, boundaryBox)
             boundary_x = boundaryBox(1);
             boundary_y = boundaryBox(2);
@@ -352,6 +381,25 @@ classdef SEMinefield < handle
             yCoords = boundary_y + rand(numItems, 1) * height;
             xyCoords = [xCoords, yCoords];
         end
+
+        % What was this one that came over from the internship of 2024.
+        function xyCoords = getRandomlyDistributedPositions1(numItems, boundaryBox)
+            boundary_x = boundaryBox(1);
+            boundary_y = boundaryBox(2);
+            width = boundaryBox(3);
+            height = boundaryBox(4);
+
+            % Initialize coordinates matrix
+            xyCoords = nan(numItems, 2);
+
+            % Generate random coordinates
+            for index = 1:numItems
+                x = boundary_x + rand * width;  % Random x-coordinate within boundary
+                y = boundary_y + rand * height; % Random y-coordinate within boundary
+                xyCoords(index,:) = [x, y];
+            end
+        end
+
 
         function xyCoords = getRandomlyGaussianDistributedPositions(numItems, boundaryBox)
       
@@ -452,3 +500,4 @@ classdef SEMinefield < handle
         end
     end
 end
+

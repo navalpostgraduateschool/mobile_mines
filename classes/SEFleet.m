@@ -1,7 +1,7 @@
 classdef SEFleet < handle
     properties (Constant)
         %Possible fleet pathing behaviors
-        BEHAVIORS={'Will Kamikaze','Kamikaze','Random_Start_Point','Random_End_Point','Rand_Start_Rand_End'}; 
+        BEHAVIORS={'Will Kamikaze','Kamikaze','Random_Start_Point','Random_End_Point','Rand_Start_Rand_End'};
     end
 
     properties
@@ -42,8 +42,6 @@ classdef SEFleet < handle
             % end
         end
 
-        
-
         %axes sync
         function didSet = setAxesHandle(obj, axesHandle)
             didSet = false;
@@ -58,7 +56,15 @@ classdef SEFleet < handle
         %refreshes the display
         function refreshDisplay(obj)
             for shipIdx = 1:obj.numShips
-                obj.ships(shipIdx).updateDisplay();
+                if obj.ships(shipIdx).alive
+                    obj.ships(shipIdx).updateDisplay();
+                end
+            end
+        end
+
+        function displayShipHeadings(obj, shouldDisplay)
+            for n=1:obj.numShips
+                obj.ships(n).showPath(shouldDisplay);
             end
         end
         
@@ -116,6 +122,35 @@ classdef SEFleet < handle
             end
         end
 
+        %NEW
+        %     function update(obj)
+        %    % Do we have any active ships?
+        %    obj.updateActiveShip();
+
+        %    for n = 1:obj.numShips
+        %        % Only update ships with "kamikaze" behavior and delay start
+        %        if strcmp(obj.behavior, 'Kamikaze')
+        %            if obj.ships(n).isAlive() && obj.ships(n).isInBounds()
+        %                if isempty(obj.ships(n).startTime)
+        %                    % Set start time for delayed start
+        %                    startDelay = obj.startDelayRange(1) + rand() * (obj.startDelayRange(2) - obj.startDelayRange(1));
+        %                    obj.ships(n).startTime = tic;
+        %                else
+        %                    % Check if ship should start moving
+        %                    elapsed = toc(obj.ships(n).startTime);
+        %                    if elapsed >= startDelay
+        %                        obj.ships(n).update();
+        %                    end
+        %                end
+        %            end
+        %        else
+        %            % For other behaviors, update normally
+        %            obj.ships(n).update();
+        %        end
+        %    end
+        %end
+        %
+
         function didSet = setNumShips(obj, numShips)
             didSet = false;
             if numShips>= 0
@@ -125,6 +160,7 @@ classdef SEFleet < handle
 
                 for k=1:obj.numShips
                     obj.ships(k) = SEShip(0, 0, obj.axesHandle);
+
                 end
 
                 % This causes a refresh for the ships initial and end
@@ -147,15 +183,24 @@ classdef SEFleet < handle
             xCenters = repmat(opX+opWidth/2, obj.numShips, 1);
 
             yStarts = repmat(opY, obj.numShips,1);
-            yEnds = obj.operatingBoundary(4)+ yStarts;
+
+            % push our ending position out a bit beyond the rest of the
+            % boundary so we do not get stuck at the end going back and
+            % forth
+            yEnds = 1.25*opHeight+yStarts;
+
+            % String out our ships starting positions
+            yStarts = yStarts - 0.5*opHeight*(0:obj.numShips-1)';  
             xRandStarts = opX+rand(obj.numShips,1)*opWidth;
             xRandEnds = opX+rand(obj.numShips,1)*opWidth;
             
             if obj.numShips>0
                 switch lower(obj.behavior)
-                    case 'kamikaze'
-                        startPos = [xCenters, yStarts];
-                        endPos = [xCenters, yEnds];
+                    case 'kamikaze'                      
+
+                       startPos = [xCenters, yStarts];
+                       endPos = [xCenters, yEnds];
+
                     case 'random_start_point'
                         startPos = [xRandStarts, yStarts];
                         endPos = [xCenters, yEnds];
@@ -175,53 +220,27 @@ classdef SEFleet < handle
             end
         end
 
-        % TODO - talk with @hyatt about this method and where to utilize it
-        % in the class
-        % Method to update the position of the fleet
-        function updatePositions(obj)
-            % Assuming each ship has a method to update its position
-            for i = 1:obj.numShips
-                % TODO - discuss misconception here
-                obj.ships(i).updatePosition();
-                obj.axesHandle.Ships(i).updatePosition(newPosition);
+        
+        function inBounds = isShipInBounds(obj, idx)
+            inBounds = obj.ships(idx).pos_y <= (obj.operatingBoundary(2) +obj.operatingBoundary(4));
+        end
+
+        function [status, isShipValid] = getStatus(obj)
+            status = struct('numAlive',0,...
+                'numSuccess', 0, ...
+                'numSunk', 0,...
+                'numRemaining', 0, ...
+                'numTransiting', 0);
+            isShipValid = false(obj.numShips, 1);
+            for n = 1:obj.numShips
+                stillAlive = obj.ships(n).isAlive();
+                inBounds = obj.isShipInBounds(n);
+                isShipValid(n) = stillAlive && inBounds;
+                status.numRemaining = status.numRemaining+ isShipValid(n);
+                status.numAlive = status.numAlive + stillAlive;
+                status.numSunk = status.numSunk + ~stillAlive;
             end
-
-            % TODO - are these below comments a todo for yourself?  Let's discuss if it is a
-            % remaining todo or just left over and can be removed
-            % pull heading and speed from ship info, use that to update
-            % position every xx frames
-        end
-
-        % Method to update the priority of the fleet
-        %function updatePriority(obj, newPriority)
-            % Assuming each ship has a priority attribute
-            %for i = 1:obj.numShips
-                %obj.graphicsHandle.Ships(i).Priority = newPriority;
-            %end
-            %if ship dies, update
-        %end
-
-        function status = getStatus(obj)
-            status = struct('numAlive', 0, ...
-                    'numSuccess', 0, ...
-                    'numSunk', 0, ...
-                    'numRemaining', 0, ...
-                    'numTransiting', 0);
-
-    for n = 1:obj.numShips
-        ship = obj.ships(n);
-        stillAlive = ship.isAlive();
-        hasArrived = isprop(ship, 'arrived') && ship.arrived;
-
-        if stillAlive && ~hasArrived
-            status.numRemaining = status.numRemaining + 1;
-        end
-
-        status.numAlive = status.numAlive + stillAlive;
-    end
-
-    status.numSunk = obj.numShips - status.numAlive;
-
+            status.numSunk = obj.numShips - status.numAlive;
         end
 
         % num is the number of ships that have not been sunk
@@ -241,7 +260,17 @@ classdef SEFleet < handle
             for n = 1:obj.numShips                
                 numAlive = numAlive + obj.ships(n).isAlive();                
             end
-        end        
+        end
+
+        function [ship, isValid] = getShip(obj, idx)
+            isValid = false;
+            ship = [];
+            if idx>0 && idx<= obj.numShips
+                ship = obj.ships(idx);
+                inBounds = obj.isShipInBounds(idx);
+                isValid = ship.isAlive && inBounds;
+            end
+        end
 
         function num = getNumShipsLeftToTransit(obj)
             status = obj.getStatus();
