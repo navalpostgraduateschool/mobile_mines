@@ -33,8 +33,8 @@ Enhanced version with mobile mine behavior and improved simulation interaction.
 ## Builds Folder
 
 
-For the most recent version, use the following direct download (if available):
-[Download Latest Installer (v1.1)](https://github.com/navalpostgraduateschool/mobile_mines/releases/download/ready/MineSimulatorInstaller.exe)
+For the most recent version, use the following direct download:
+[Download Latest Installer](https://github.com/navalpostgraduateschool/mobile_mines/releases/download/ready/MineSimulatorInstaller.exe)
 
 ---
 
