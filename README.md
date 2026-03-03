@@ -12,9 +12,19 @@ A simulation tool for analyzing and developing mobile mine behaviors.
 
 
 ## History
+This project started at the Naval Postgraduate School as part of the SE4003 Software Engineering course and in support of a capstone team tasked with analyzing mobile mines.  
 
-## 2024
-This project started at the Naval Postgraduate School as part of the SE4003 Software Engineering course. 
+### 2026
+Contributors to the project in 2026 include:
+
+
+### 2025
+Contributors to the project in 2025 include:
+* R. Walczak
+* A. da C. Canena
+* A. M. Avelar
+
+### 2024
 Contributors to the initial project include:
 * R. Plickys
 * W. Davis
@@ -26,8 +36,4 @@ Contributors to the initial project include:
 * D.J.
 * R. Herrmann
 
-## 2025
-Contributors to the project in 2025 include:
-* R. Walczak
-* A. da C. Canena
-* A. M. Avelar
+
