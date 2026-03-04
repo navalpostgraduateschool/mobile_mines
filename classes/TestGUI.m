@@ -95,7 +95,7 @@ classdef TestGUI < handle
 
             app.MapAxes = axes('Parent', app.Figure, 'Units','normalized', ...
                 'Position',[0.05 0.67 0.62 0.24]);
-            title(app.MapAxes, '2D Overhead Map');
+            title(app.MapAxes, 'Overhead Map Perspective');
 
             app.View3DAxes = axes('Parent', app.Figure, 'Units','normalized', ...
                 'Position',[0.05 0.08 0.62 0.54]);
