@@ -8,7 +8,6 @@ classdef SEMine < SEBase
     properties
         pos_x;
         pos_y;
-        detectRange = 2 % The radius range around a mine that can detect enemy ships
         damageRange = 0.25 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
@@ -16,7 +15,7 @@ classdef SEMine < SEBase
         face_color = [1 0.5 0.5];
         marker = 'hexagram';
    
-        detRangeGraphic;
+        
         explosion = 'o';
         explosionSize = 30;
         explosionColor = 'none';
@@ -24,9 +23,14 @@ classdef SEMine < SEBase
     end
 
 
+    % SetAccess protected properties require objects to use a method to
+    % change their value, but they can be accessed using the property name
     properties (SetAccess = protected)
         armed = false % (T/F)
         alive = true % (T/F)
+
+        detRangeGraphic;
+        detectRange = 30 % The radius range around a mine that can detect enemy ships
     end
     
     methods
@@ -75,6 +79,19 @@ classdef SEMine < SEBase
             end
         end
 
+        function didSet = setDetectRange(obj, detRange)
+            didSet = false;
+            if nargin>1 && isnumeric(detRange)
+                if isempty(detRange)
+                    detRange = 0;
+                end
+                if detRange>=0
+                    obj.detectRange = detRange;
+                    didSet = true;
+                end
+            end
+        end
+
         function setAxesHandle(obj, axes_handle_in)
             if nargin>1 && ishandle(axes_handle_in)
                 obj.axes_h = axes_handle_in;
@@ -111,9 +128,14 @@ classdef SEMine < SEBase
                 set(obj.detonation_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'visible',visibility);
                      
-                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', ...
-                    obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor, ...
-                    'markersize',obj.explosionSize, 'visible',visibility);
+                % Don't draw 0 sized markers
+                if obj.detectRange>0
+                    set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', ...
+                        obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor, ...
+                        'markersize',obj.detectRange, 'visible',visibility);
+                else
+                    set(obj.detRangeGraphic,'visible','off');
+                end
 
             end
         end
