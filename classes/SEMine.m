@@ -1,4 +1,4 @@
-classdef SEMine < handle
+classdef SEMine < SEBase
     events
         Armed
         Disarmed

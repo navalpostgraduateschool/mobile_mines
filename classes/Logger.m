@@ -47,7 +47,7 @@ classdef Logger < handle
             fullMsg = sprintf('[%s] [%s] %s', timestamp, level, message);
 
             if ~isempty(this.TextHandle) && ishandle(this.TextHandle)
-                previous = get(this.TextHandle,'string');
+                previous = get(this.TextHandle,'value');
                 if isempty(previous)
                     setText = fullMsg;
                 elseif ischar(previous)
@@ -55,7 +55,7 @@ classdef Logger < handle
                 else
                     setText = [{fullMsg}; previous];
                 end
-                set(this.TextHandle,'string',setText);
+                set(this.TextHandle,'value',setText);
                 drawnow;
             else
                 fprintf(1,'%s\n',fullMsg);

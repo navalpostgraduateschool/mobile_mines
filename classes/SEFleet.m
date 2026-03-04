@@ -1,4 +1,4 @@
-classdef SEFleet < handle
+classdef SEFleet < SEBase
     properties (Constant)
         %Possible fleet pathing behaviors
         BEHAVIORS={'Will Kamikaze','Kamikaze','Random_Start_Point','Random_End_Point','Rand_Start_Rand_End'};
