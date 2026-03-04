@@ -1,4 +1,4 @@
-classdef SEShip<handle
+classdef SEShip < SEBase
  
     properties
         pos_x;

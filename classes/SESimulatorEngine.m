@@ -1,4 +1,4 @@
-classdef SESimulatorEngine < handle
+classdef SESimulatorEngine < SEBase
     events
         SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
         SimCompleted; % monte carlo simulations consist of a number of simulations;
@@ -17,6 +17,7 @@ classdef SESimulatorEngine < handle
 
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
+        debugMode = false;
 
         curSimulation = 0;  % the current simulation being run.  Each simulation consists of a number of steps where the fleet goes through the minefiles
         numSimulations = 1;  % The number of simulations to run
@@ -80,6 +81,7 @@ classdef SESimulatorEngine < handle
             num = obj.fleet.getNumAlive();
         end
 
+
         function run(obj, numSimulationsToRun)
             if nargin<2 || isempty(numSimulationsToRun) || numSimulationsToRun < 0
                 numSimulationsToRun = obj.numSimulations;
@@ -120,8 +122,6 @@ classdef SESimulatorEngine < handle
         function didSet = setMinefieldBox(obj, minefield_box)
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
-
-
 
         function didSet = setNumRuns(obj,numRuns)
             didSet = false;
@@ -287,5 +287,13 @@ classdef SESimulatorEngine < handle
             % Average Number of ships alive at end of q route for all trials
             % meanSurvivalRate = sum(numShipsALive) / numTrials;
         end
+
+        function setDebugMode(obj, setOn)
+            if nargin <1 || isempty(setOn)
+                setOn = false;
+            end
+            obj.debugMode = logical(setOn);
+        end
+        
     end
 end
