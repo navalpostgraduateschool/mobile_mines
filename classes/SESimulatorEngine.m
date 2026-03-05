@@ -15,6 +15,12 @@ classdef SESimulatorEngine < handle
         mineDamageRange % Mine damage radius
         minedetectRange % mine detection range
 
+        % Group 7 (explosions) addition
+        activeEmitters = []; % Array to track active particle emitters
+        oceanCurrent = [-0.01, -0.01]; % Simulated ocean current for particles
+        currentArrow_h; % <-- NEW: Handle for the visual arrow
+        currentText_h;  % <-- NEW: Handle for the text label
+
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
 
@@ -52,6 +58,14 @@ classdef SESimulatorEngine < handle
             obj.fleet.reset();
             obj.minefield.reset();
             obj.curSimulationStep = 0;
+
+            % Group 7 addition: Clear any active emitters from previous runs
+            for e = 1:length(obj.activeEmitters)
+                delete(obj.activeEmitters(e));
+            end
+            obj.activeEmitters = [];
+            % end Group 7 (explosion) addition
+
         end
 
         function displayShipHeadings(obj, shouldDisplay)
@@ -133,8 +147,35 @@ classdef SESimulatorEngine < handle
 
 
         function setAxesHandle(obj, axes_h)
+            % Next line is New code for Team 7
+            obj.axes_h = axes_h; % <-- NEW: Save the handle for the engine to use!
             obj.fleet.setAxesHandle(axes_h);
             obj.minefield.setAxesHandle(axes_h);
+
+            % NEW: Draw the ocean current indicator in the bottom right corner
+            if isempty(obj.currentArrow_h) || ~ishandle(obj.currentArrow_h)
+                % Get the current limits of the axes to place the arrow dynamically
+                xlims = get(axes_h, 'XLim');
+                ylims = get(axes_h, 'YLim');
+                
+                % Position at 85% of X width, and 10% of Y height (Bottom Right)
+                x_pos = xlims(1) + 0.85 * (xlims(2) - xlims(1));
+                y_pos = ylims(1) + 0.10 * (ylims(2) - ylims(1));
+                
+                % Scale the arrow purely for visual rendering (so we can see it)
+                visualScale = 40; 
+                u = obj.oceanCurrent(1) * visualScale;
+                v = obj.oceanCurrent(2) * visualScale;
+                
+                % Use quiver to draw a directional arrow without wiping the canvas
+                hold(axes_h, 'on'); 
+                obj.currentArrow_h = quiver(axes_h, x_pos, y_pos, u, v, 0, ...
+                    'Color', '#0072BD', 'LineWidth', 2, 'MaxHeadSize', 2);
+                
+                % Add a label nearby
+                obj.currentText_h = text(axes_h, x_pos, y_pos - (0.05 * (ylims(2) - ylims(1))), 'Current', ...
+                    'Color', '#0072BD', 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+            end
         end
 
         function behaviors = getValidFleetBehaviors(obj)
@@ -209,6 +250,18 @@ classdef SESimulatorEngine < handle
             % Check for mine detonations
             obj.detectMineDetonations();
 
+            % Group 7 (explosions) addition: Update active particle emitters
+            for e = length(obj.activeEmitters):-1:1
+                
+                if obj.activeEmitters(e).is_active
+                    obj.activeEmitters(e).update();
+                else
+                    % Clean up finished emitters to free memory
+                    delete(obj.activeEmitters(e));
+                    obj.activeEmitters(e) = [];
+                end
+            end
+
             if obj.animate
                 pause(1/obj.fps);
             end
@@ -223,15 +276,33 @@ classdef SESimulatorEngine < handle
         function updateFleetPosition(obj)
             obj.fleet.updatePosition();
         end
-        
-        function detectMineDetonations(obj)
+
+    % Entire function updated by Team 7 (explosions) 
+
+    function detectMineDetonations(obj)
             minesExploded = false(obj.getNumMines,1);
+            
+            % NEW: Track the velocity of the ship that hit the mine
+            hitVelocities = zeros(obj.getNumMines, 2); 
+
             for shipIdx = 1:obj.getNumShips()
                 [ship, isValid] = obj.fleet.getShip(shipIdx);
                 if isValid
-                    [inMinesDamageRange, inMinesDetectionRange, distances] = obj.minefield.getMineRanges(ship);
+                    [inMinesDamageRange, ~, ~] = obj.minefield.getMineRanges(ship);
 
                     if any(inMinesDamageRange)
+                        % NEW: Calculate ship's velocity vector to direct the explosion
+                        headingRad = ship.heading_deg * pi / 180;
+                        % Multiply by a constant to give the explosion velocity scale
+                        shipVelX = cos(headingRad) * 5; 
+                        shipVelY = sin(headingRad) * 5;
+
+                        % Assign this velocity to the mines that were hit
+                        hitIdx = find(inMinesDamageRange);
+                        for k = 1:length(hitIdx)
+                            hitVelocities(hitIdx(k), :) = [shipVelX, shipVelY];
+                        end
+
                         minesExploded(inMinesDamageRange) = true;
                         ship.sink();
                     end
@@ -241,10 +312,22 @@ classdef SESimulatorEngine < handle
             if any(minesExploded)
                 mineIdx = find(minesExploded);
                 for n=1:numel(mineIdx)
-                    obj.minefield.mines( mineIdx(n)).explode();
+                    mIdx = mineIdx(n);
+                    mineObj = obj.minefield.mines(mIdx);
+                    mineObj.explode();
+                    
+                    % NEW: Instantiate and trigger a particle emitter at the mine's location
+                    if ~isempty(obj.axes_h) && ishandle(obj.axes_h)
+                        newEmitter = SEParticleEmitter(obj.axes_h, 40);
+                        newEmitter.setEnvironmentalForce(obj.oceanCurrent);
+                        newEmitter.trigger(mineObj.pos_x, mineObj.pos_y, hitVelocities(mIdx, :));
+                        
+                        % Add to our tracking array
+                        obj.activeEmitters = [obj.activeEmitters, newEmitter];
+                    end
                 end
             end
-        end        
+    end
 
         function changeFleetBehavior(obj, newBehavior)
             obj.fleet.changeBehavior(newBehavior);
