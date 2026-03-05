@@ -222,7 +222,7 @@ classdef TestGUI < handle
             ylim(app.MapAxes, [0 9]);
             set(app.MapAxes, 'Color', [0.6745 0.9686 0.9882], ...
                 'Box', 'on', 'XGrid', 'on', 'YGrid', 'on');
-            title(app.MapAxes, '2D Overhead Map');
+            title(app.MapAxes, 'Overhead Map Perspective');
 
             app.simEngine.refreshDisplay();
 

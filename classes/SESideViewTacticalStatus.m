@@ -183,7 +183,7 @@ classdef SESideViewTacticalStatus < handle
             %
             % Input:
             %   simEngine - existing simulation engine object
-            %
+            %g
             % What it does:
             %   - read ship state from simEngine.fleet.ships
             %   - read mine state from simEngine.minefield.mines
