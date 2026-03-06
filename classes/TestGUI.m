@@ -1,5 +1,25 @@
 classdef TestGUI < handle
     % DEBUG - NOT FOR SUBMISSION
+    %
+    % -----CHEAT SHEET -----
+    %
+    % app.renderer3D.nextView() | Cycles to the next camera/view angle
+    % app.renderer3D.reset() | Reset Side View (button?)
+    % app.renderer3D.getViewName() | Returns side view labels
+    % app.renderer3D.applyViewPreset(); | Initializes view to preset angle 
+    % SESideViewTacticalStatus(X,Y,Z) | Creates the side-views
+    %
+    % How I initialize test: 
+    %   app.renderer3D = SESideViewTacticalStatus(app.View3DAxes, app.boundary_box, app.minefield_box);
+    %   app.rebuildSimulation();
+    %   app.renderer3D.applyViewPreset();
+    %
+    %--------------------------------------------------
+    %
+    % How I add current angle description to button or labels:
+    %   set(app.ViewButton, 'String', ['View: ' app.renderer3D.getViewName()]);
+    %
+    %--------------------------------------------------
 
     properties
         Figure
