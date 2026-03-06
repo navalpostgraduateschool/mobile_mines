@@ -8,6 +8,7 @@ classdef TestGUI < handle
         ControlPanel
         StartButton
         ResetButton
+        ViewButton
         StatusText
         NumRunsEdit
         TimeLimitEdit
@@ -31,6 +32,10 @@ classdef TestGUI < handle
         localMaxSteps (1,1) double = 50
         isRunning (1,1) logical = false
         currentRun (1,1) double = 0
+
+        % 3-06-26: Opposing ships (engine-owned) config
+        enableOpposingShips (1,1) logical = true
+        opposingShipProbability (1,1) double = 0.50
     end
 
     methods
@@ -70,10 +75,11 @@ classdef TestGUI < handle
             set(app.LayoutPopup, 'String', tmpEngine.getValidMinefieldLayouts());
             set(app.MineTypePopup, 'String', {'mobile','static'});
 
-            % Update renderer
             app.renderer3D = SESideViewTacticalStatus(app.View3DAxes, app.boundary_box, app.minefield_box);
-
             app.rebuildSimulation();
+            app.renderer3D.applyViewPreset();
+
+            set(app.ViewButton, 'String', ['View: ' app.renderer3D.getViewName()]);
 
             try
                 delete(tmpEngine);
@@ -119,6 +125,12 @@ classdef TestGUI < handle
                 'Callback',@(s,e)app.ResetButtonPushed());
             y = y - dy;
 
+            app.ViewButton = uicontrol(app.ControlPanel, 'Style','pushbutton', ...
+                'String','View', ...
+                'Units','normalized','Position',[0.08 y 0.84 0.045], ...
+                'Callback',@(s,e)app.ViewButtonPushed());
+            y = y - dy;
+
             app.StatusText = uicontrol(app.ControlPanel, 'Style','text', 'String','Ready', ...
                 'Units','normalized', 'HorizontalAlignment','left', ...
                 'Position',[0.08 y 0.84 0.05], ...
@@ -144,6 +156,17 @@ classdef TestGUI < handle
             app.HeadingCheckbox = uicontrol(app.ControlPanel, 'Style','checkbox', ...
                 'String','Display Ship Headings', 'Value',1, ...
                 'Units','normalized','Position',[0.08 y 0.84 0.04]);
+        end
+
+        function ViewButtonPushed(app)
+            if isempty(app.renderer3D) || ~isvalid(app.renderer3D)
+                return;
+            end
+            app.renderer3D.nextView();
+            try
+                set(app.ViewButton, 'String', ['View: ' app.renderer3D.getViewName()]);
+            catch
+            end
         end
 
         function h = addLabel(app, txt, y, w)
@@ -195,6 +218,14 @@ classdef TestGUI < handle
             app.simEngine.setNumMines(app.getNumeric(app.NumMinesEdit,9));
             app.simEngine.displayShipHeadings(logical(get(app.HeadingCheckbox,'Value')));
 
+            % 3-06-26: Enable opposing ships feature in the engine (engine-owned behavior)
+            try
+                app.simEngine.setOpposingShipsEnabled(app.enableOpposingShips);
+                app.simEngine.setOpposingShipProbability(app.opposingShipProbability);
+            catch
+                % If running against an older engine build, ignore quietly
+            end
+
             app.applyMineRanges();
             app.resetDisplays();
         end
@@ -225,10 +256,8 @@ classdef TestGUI < handle
             title(app.MapAxes, 'Overhead Map Perspective');
 
             app.simEngine.refreshDisplay();
-
             app.renderer3D.reset();
             app.renderer3D.update(app.simEngine);
-
             app.updateStatusCounts();
         end
 
@@ -255,7 +284,9 @@ classdef TestGUI < handle
                     app.simEngine.refreshDisplay();
                     app.renderer3D.update(app.simEngine);
                     app.updateStatusCounts();
-                    drawnow;
+
+                    drawnow limitrate;
+                    pause(0.01);
 
                     if ~ishandle(app.Figure) || ~app.isRunning
                         break;
@@ -334,6 +365,10 @@ classdef TestGUI < handle
                 if ishandle(ctrls{k})
                     set(ctrls{k}, 'Enable', state);
                 end
+            end
+
+            if ishandle(app.ViewButton)
+                set(app.ViewButton, 'Enable', 'on');
             end
         end
 
