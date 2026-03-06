@@ -27,7 +27,7 @@ classdef Logger < handle
     methods
 
         function setTextHandle(this, h)
-            if isempty(h) || ishandle(h)
+            if isempty(h) || isvalid(h)
                 this.TextHandle = h;
             end
         end
@@ -46,8 +46,8 @@ classdef Logger < handle
             timestamp = datestr(now, 'yyyy-mm-dd HH:MM:SS');
             fullMsg = sprintf('[%s] [%s] %s', timestamp, level, message);
 
-            if ~isempty(this.TextHandle) && ishandle(this.TextHandle)
-                previous = get(this.TextHandle,'string');
+            if ~isempty(this.TextHandle) && isvalid(this.TextHandle)
+                previous = get(this.TextHandle,'value');
                 if isempty(previous)
                     setText = fullMsg;
                 elseif ischar(previous)
@@ -55,7 +55,7 @@ classdef Logger < handle
                 else
                     setText = [{fullMsg}; previous];
                 end
-                set(this.TextHandle,'string',setText);
+                set(this.TextHandle,'value',setText);
                 drawnow;
             else
                 fprintf(1,'%s\n',fullMsg);
