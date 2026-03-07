@@ -3,6 +3,7 @@ classdef SEShip < SEBase
     properties
         pos_x;
         pos_y;
+        pos_z = 0;
         ship_type = 'General'; % Placeholder for now
         speed_nmh = 500; % speed in knots (0-30) (nm/hour)
         %shipPriority = 1; % scales based off total number of ships
@@ -47,7 +48,11 @@ classdef SEShip < SEBase
             obj.setPosition(startPos);
         end
 
-        function setPosition(obj, pos_x,pos_y)
+        function pos = getPosition(obj)
+            pos = [obj.pos_x obj.pos_y obj.pos_z];
+        end
+
+        function setPosition(obj, pos_x, pos_y)
             narginchk(2,3);  % if just 2 arguments, then the second is a two element vector with x, y
             if nargin==2
                 pos_y = pos_x(2);
@@ -79,7 +84,8 @@ classdef SEShip < SEBase
             obj.end_y = pos_y;
         end
 
-        function cur_heading = updateHeading(obj)
+        % dt is available as a second argument
+        function cur_heading = updateHeading(obj, ~)
             % Calculate the differences in x and y
             dx = obj.end_x - obj.pos_x;
             dy = obj.end_y - obj.pos_y;
@@ -108,20 +114,20 @@ classdef SEShip < SEBase
         end
 
 
-        function update(obj)
+        function update(obj, dt, mines)
             if obj.isAlive()
-                obj.updateHeading();
-                obj.updatePosition();
+                obj.updateHeading(dt);
+                obj.updatePosition(dt);
                 obj.updateDisplay();
             end
         end
 
-        function updatePosition(obj)
+        function updatePosition(obj, dt)
             % Conversion
             time_multiplier = 10; % Speed up the simulation by this factor
             nm_per_second = (obj.speed_nmh / 3600) * time_multiplier; 
-            fps = 10;
-            distance_per_frame = nm_per_second / fps;
+
+            distance_per_frame = nm_per_second *dt;
 
             dx_total = obj.end_x - obj.pos_x;
             dy_total = obj.end_y - obj.pos_y;
