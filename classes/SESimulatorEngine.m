@@ -24,6 +24,12 @@ classdef SESimulatorEngine < SEBase
 
         curSimulationStep = 0;
         maxSimulationSteps = 50;
+
+        isRunning = false;
+    end
+
+    properties (Dependent)
+        dt
     end
     
     methods
@@ -81,6 +87,13 @@ classdef SESimulatorEngine < SEBase
             num = obj.fleet.getNumAlive();
         end
 
+        function value = get.dt(obj)
+            value = 1/obj.fps;
+        end
+
+        function stop(obj)
+            obj.isRunning = false;
+        end
 
         function run(obj, numSimulationsToRun)
             if nargin<2 || isempty(numSimulationsToRun) || numSimulationsToRun < 0
@@ -90,16 +103,20 @@ classdef SESimulatorEngine < SEBase
             % make sure we aren't dealing with rational/decimal numbers
             obj.numSimulations = floor(numSimulationsToRun);
 
+            obj.isRunning = true;
+
             for simulationNum = 1:obj.numSimulations
                 obj.curSimulation = simulationNum;
                 obj.reset();
-                while ~obj.simulationDone()
+                while ~obj.simulationDone() && obj.isRunning
                     obj.update();
                     obj.notify('SimUpdated');
                 end
                 obj.notify('SimCompleted');
             end
             obj.notify('MonteCarloFinished');
+
+            obj.isRunning = false;
         end
 
         function isDone = simulationDone(obj)
@@ -130,7 +147,6 @@ classdef SESimulatorEngine < SEBase
                 didSet = true;
             end 
         end
-
 
         function setAxesHandle(obj, axes_h)
             obj.fleet.setAxesHandle(axes_h);
@@ -195,22 +211,26 @@ classdef SESimulatorEngine < SEBase
         function setAnimate(obj, shouldAnimate)
             obj.animate = shouldAnimate;
         end
-     
+
 
         % TODO - talk with @hyatt about the updateFleetPosition method and
         % detection of detonations ...
         function update(obj)
             % Update fleet position
-            obj.fleet.update();
+
+            obj.fleet.update(obj.dt);
             
+
+            ships = obj.fleet.getActiveShipPositions();
+
             % Update minefield
-            obj.minefield.update();
+            obj.minefield.update(obj.dt, ships)
             
             % Check for mine detonations
             obj.detectMineDetonations();
 
             if obj.animate
-                pause(1/obj.fps);
+                pause(obj.dt);
             end
             obj.curSimulationStep = obj.curSimulationStep + 1;
         end
