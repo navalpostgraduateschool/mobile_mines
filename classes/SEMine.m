@@ -1,4 +1,4 @@
-classdef SEMine < handle
+classdef SEMine < SEBase
     events
         Armed
         Disarmed
@@ -8,7 +8,7 @@ classdef SEMine < handle
     properties
         pos_x;
         pos_y;
-        detectRange = 2 % The radius range around a mine that can detect enemy ships
+        pos_z = 0;  % right on the surface by default
         damageRange = 0.25 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
@@ -16,7 +16,7 @@ classdef SEMine < handle
         face_color = [1 0.5 0.5];
         marker = 'hexagram';
    
-        detRangeGraphic;
+        
         explosion = 'o';
         explosionSize = 30;
         explosionColor = 'none';
@@ -24,9 +24,14 @@ classdef SEMine < handle
     end
 
 
+    % SetAccess protected properties require objects to use a method to
+    % change their value, but they can be accessed using the property name
     properties (SetAccess = protected)
         armed = false % (T/F)
         alive = true % (T/F)
+
+        detRangeGraphic;
+        detectRange = 30 % The radius range around a mine that can detect enemy ships
     end
     
     methods
@@ -75,6 +80,19 @@ classdef SEMine < handle
             end
         end
 
+        function didSet = setDetectRange(obj, detRange)
+            didSet = false;
+            if nargin>1 && isnumeric(detRange)
+                if isempty(detRange)
+                    detRange = 0;
+                end
+                if detRange>=0
+                    obj.detectRange = detRange;
+                    didSet = true;
+                end
+            end
+        end
+
         function setAxesHandle(obj, axes_handle_in)
             if nargin>1 && ishandle(axes_handle_in)
                 obj.axes_h = axes_handle_in;
@@ -111,16 +129,21 @@ classdef SEMine < handle
                 set(obj.detonation_h, 'xdata', obj.pos_x, 'ydata', ...
                     obj.pos_y,'visible',visibility);
                      
-                set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', ...
-                    obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor, ...
-                    'markersize',obj.explosionSize, 'visible',visibility);
+                % Don't draw 0 sized markers
+                if obj.detectRange>0
+                    set(obj.detRangeGraphic, 'xdata', obj.pos_x, 'ydata', ...
+                        obj.pos_y,'marker',obj.explosion,'markerfacecolor',obj.explosionColor, ...
+                        'markersize',obj.detectRange, 'visible',visibility);
+                else
+                    set(obj.detRangeGraphic,'visible','off');
+                end
 
             end
         end
 
         % TODO - talk with @hyatt about possible misconception with setting
         % dx, dy and updating the position.
-        function update(obj)
+        function update(obj, dt, force, ships)
             % Update the mine's state, possibly checking for detection, etc.
             % obj.updateArmament();
             % obj.updatePosition(); --> see also setDxDy
@@ -131,10 +154,15 @@ classdef SEMine < handle
             didSet = false;
         end
         
-        function didSet = setPosition(obj, x, y)
+        function didSet = setPosition(obj, x, y, z)
             % Set the mine's position
             obj.pos_x = x;
             obj.pos_y = y;
+
+            if nargin>3
+                obj.pos_z = z;
+            end
+
             didSet = true;
         end
         
@@ -183,6 +211,10 @@ classdef SEMine < handle
         
         function armedStatus = isArmed(obj)
             armedStatus = obj.armed;
+        end
+
+        function pos = getPosition(obj)
+            pos = [obj.pos_x obj.pos_y obj.pos_z];
         end
 
     end

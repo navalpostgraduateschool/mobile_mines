@@ -2,7 +2,7 @@ classdef SEMobileMine < SEMine
     properties
         dx = 0.5;
         dy = 0.5;
-        fps = 10
+        dz = 0;
     end
     
     methods
@@ -12,7 +12,8 @@ classdef SEMobileMine < SEMine
             obj.marker = 'pentagram';
         end
 
-        function updatePosition(obj)
+
+        function updatePosition(obj, dt, force)
             % Update the position of the mobile mine based on ship position
             %if true || obj.isAlive() && obj.isArmed() && obj.hasDetected(ship_x, ship_y)
                 % Implement your logic to update position here
@@ -25,14 +26,11 @@ classdef SEMobileMine < SEMine
             end
             
         end
-
-        function update(obj)
+        function update(obj, dt, force, ships)
             if obj.isAlive()
-                obj.updatePosition();
-                obj.updateDisplay();
+                obj.updatePosition(dt, force);
+                update@SEMine(obj, dt, force, ships);
             end
         end
     end
 end
-
-%minePosition = minePosition + (rand(1, 2) - 0.5)
