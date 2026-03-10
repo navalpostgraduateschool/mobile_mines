@@ -15,7 +15,8 @@ viewPass = false;
 
 try
     % Create the app
-    app = mobilemineSim_sp_2025_TacticalSideView();
+    % app = mobilemineSim_sp_2025_TacticalSideView();
+    app = mobilemineSim_sp_2025();
     drawnow;
     pause(0.5);
 
@@ -36,7 +37,7 @@ try
             drawnow;
             pause(0.25);
 
-            % A renderer-created display should leave graphics children
+            % A renderer-created display should leave children
             if ~isempty(app.SideViewAxes.Children)
                 displayPass = true;
             end
@@ -62,7 +63,7 @@ try
         drawnow;
         pause(0.25);
 
-        % Capture current camera/view
+        % Capture current view
         oldView = view(app.SideViewAxes);
 
         % Trigger the button callback exactly as the UI would
