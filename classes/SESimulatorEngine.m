@@ -1,4 +1,4 @@
-classdef SESimulatorEngine < handle
+classdef SESimulatorEngine < SEBase
     events
         SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
         SimCompleted; % monte carlo simulations consist of a number of simulations;
@@ -17,12 +17,19 @@ classdef SESimulatorEngine < handle
 
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
+        debugMode = false;
 
         curSimulation = 0;  % the current simulation being run.  Each simulation consists of a number of steps where the fleet goes through the minefiles
         numSimulations = 1;  % The number of simulations to run
 
         curSimulationStep = 0;
         maxSimulationSteps = 50;
+
+        isRunning = false;
+    end
+
+    properties (Dependent)
+        dt
     end
     
     methods
@@ -80,6 +87,14 @@ classdef SESimulatorEngine < handle
             num = obj.fleet.getNumAlive();
         end
 
+        function value = get.dt(obj)
+            value = 1/obj.fps;
+        end
+
+        function stop(obj)
+            obj.isRunning = false;
+        end
+
         function run(obj, numSimulationsToRun)
             if nargin<2 || isempty(numSimulationsToRun) || numSimulationsToRun < 0
                 numSimulationsToRun = obj.numSimulations;
@@ -88,16 +103,20 @@ classdef SESimulatorEngine < handle
             % make sure we aren't dealing with rational/decimal numbers
             obj.numSimulations = floor(numSimulationsToRun);
 
+            obj.isRunning = true;
+
             for simulationNum = 1:obj.numSimulations
                 obj.curSimulation = simulationNum;
                 obj.reset();
-                while ~obj.simulationDone()
+                while ~obj.simulationDone() && obj.isRunning
                     obj.update();
                     obj.notify('SimUpdated');
                 end
                 obj.notify('SimCompleted');
             end
             obj.notify('MonteCarloFinished');
+
+            obj.isRunning = false;
         end
 
         function isDone = simulationDone(obj)
@@ -121,8 +140,6 @@ classdef SESimulatorEngine < handle
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
 
-
-
         function didSet = setNumRuns(obj,numRuns)
             didSet = false;
             if numRuns >= 0
@@ -130,7 +147,6 @@ classdef SESimulatorEngine < handle
                 didSet = true;
             end 
         end
-
 
         function setAxesHandle(obj, axes_h)
             obj.fleet.setAxesHandle(axes_h);
@@ -195,22 +211,26 @@ classdef SESimulatorEngine < handle
         function setAnimate(obj, shouldAnimate)
             obj.animate = shouldAnimate;
         end
-     
+
 
         % TODO - talk with @hyatt about the updateFleetPosition method and
         % detection of detonations ...
         function update(obj)
             % Update fleet position
-            obj.fleet.update();
+
+            obj.fleet.update(obj.dt);
             
+
+            ships = obj.fleet.getActiveShipPositions();
+
             % Update minefield
-            obj.minefield.update();
+            obj.minefield.update(obj.dt, ships)
             
             % Check for mine detonations
             obj.detectMineDetonations();
 
             if obj.animate
-                pause(1/obj.fps);
+                pause(obj.dt);
             end
             obj.curSimulationStep = obj.curSimulationStep + 1;
         end
@@ -287,5 +307,13 @@ classdef SESimulatorEngine < handle
             % Average Number of ships alive at end of q route for all trials
             % meanSurvivalRate = sum(numShipsALive) / numTrials;
         end
+
+        function setDebugMode(obj, setOn)
+            if nargin <1 || isempty(setOn)
+                setOn = false;
+            end
+            obj.debugMode = logical(setOn);
+        end
+        
     end
 end
