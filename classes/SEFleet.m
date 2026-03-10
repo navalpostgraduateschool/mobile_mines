@@ -1,4 +1,4 @@
-classdef SEFleet < handle
+classdef SEFleet < SEBase
     properties (Constant)
         %Possible fleet pathing behaviors
         BEHAVIORS={'Will Kamikaze','Kamikaze','Random_Start_Point','Random_End_Point','Rand_Start_Rand_End'};
@@ -33,6 +33,20 @@ classdef SEFleet < handle
             end
         end
 
+        function ships = getActiveShips(obj)
+            [~, isShipValid] = obj.getStatus();
+            ships = obj.ships(isShipValid);
+        end
+
+        function pos = getActiveShipPositions(obj)
+            validShips = obj.getActiveShips();
+            numValid = numel(validShips);
+            pos = zeros(numValid, 3);
+            for k = 1:numValid
+                pos(k,:) = validShips(k).getPosition();
+            end
+        end
+
         % Reset the fleet for the current configuration
         function reset(obj)
             obj.setNumShips(obj.numShips); %  this invokes obj.resetBehavior()
@@ -52,6 +66,7 @@ classdef SEFleet < handle
                 end
             end
         end
+
         
         %refreshes the display
         function refreshDisplay(obj)
@@ -114,11 +129,11 @@ classdef SEFleet < handle
             % obj.activeShipIndex;
         end
 
-        function update(obj)
+        function update(obj, dt, mines)
             % do we have any active ships
             obj.updateActiveShip();
             for n = 1:obj.numShips
-                obj.ships(n).update();
+                obj.ships(n).update(dt);
             end
         end
 
