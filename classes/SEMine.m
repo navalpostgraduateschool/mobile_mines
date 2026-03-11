@@ -8,6 +8,7 @@ classdef SEMine < SEBase
     properties
         pos_x;
         pos_y;
+        pos_z = 0;  % right on the surface by default
         damageRange = 0.25 % The radius range that enemy ships can be engaged by friendly mines
         axes_h;
         graphic_h;
@@ -142,7 +143,7 @@ classdef SEMine < SEBase
 
         % TODO - talk with @hyatt about possible misconception with setting
         % dx, dy and updating the position.
-        function update(obj)
+        function update(obj, dt, force, ships)
             % Update the mine's state, possibly checking for detection, etc.
             % obj.updateArmament();
             % obj.updatePosition(); --> see also setDxDy
@@ -153,10 +154,15 @@ classdef SEMine < SEBase
             didSet = false;
         end
         
-        function didSet = setPosition(obj, x, y)
+        function didSet = setPosition(obj, x, y, z)
             % Set the mine's position
             obj.pos_x = x;
             obj.pos_y = y;
+
+            if nargin>3
+                obj.pos_z = z;
+            end
+
             didSet = true;
         end
         
@@ -228,6 +234,10 @@ classdef SEMine < SEBase
                 details.notes = '';             
 
             end
+        end
+        
+        function pos = getPosition(obj)
+            pos = [obj.pos_x obj.pos_y obj.pos_z];
         end
 
     end
