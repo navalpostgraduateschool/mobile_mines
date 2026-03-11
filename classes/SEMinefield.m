@@ -1,4 +1,4 @@
-classdef SEMinefield < handle
+classdef SEMinefield < SEBase
     properties(Constant)
         LAYOUTS = {'uniform','rand','randn','uniform-e','intership-2024'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
@@ -11,14 +11,6 @@ classdef SEMinefield < handle
         axes_h  % Color blob (could be a placeholder for visualization)
         layout = 'uniform' % How the mines are arrayed = only supporting random uniform distrubition right now
 
-        % REMOVE after June 7, 2024
-        % Note: these should be placed in the individual mine classes as
-        % properties of the entire class or subclasses if we want to make
-        % specific types of mines.
-        % detect_Range  % The radius range around a mine that can detect enemy ships
-        % damage_Range  % The range that enemy ships can be engaged by friendly mines
-        % REMOVE END
-
         boundary_box
         boundary_x = 0 % Boundary x - lower left corner of the mine fields operating area
         boundary_y = 0 % Boundary y - lower left corner (y)
@@ -29,6 +21,7 @@ classdef SEMinefield < handle
 
     properties(SetAccess=protected)
         mineType = 'mobile';
+        environment;  % instance of SEEnvironment;
     end
     
     methods
@@ -53,6 +46,23 @@ classdef SEMinefield < handle
                 end
             end
         end
+
+        % Returns the environment forces applied at position.  Position is
+        % a 1x2 or 1x3 vector that is passed to obj.environment, an instance
+        % of SEEnvironment
+        function forceAtPos = getEnvironmentForce(obj, position)
+            
+            %#ok<INUSD>
+            persistent warned
+
+            if isempty(warned)
+                obj.logWarning('SEMineField.getEnvironmentForce not yet implemented. Environment team must provide environment integration.');
+                warned = true;
+            end
+
+            forceAtPos = [0.5 1 0];  
+        end
+
 
         function didSet = setAxesHandle(obj, axesHandle)
             didSet = false;
@@ -93,7 +103,6 @@ classdef SEMinefield < handle
                 obj.reset();
             end
         end
-
 
         function num = getNumUnexplodedMines(obj)
             num = 0;
@@ -139,7 +148,6 @@ classdef SEMinefield < handle
                         xyCoords = SEMinefield.getRandomlyUniformDistributedPositions(obj.number_of_mines, obj.boundary_box);
                 end
 
-
                 w = 0.2;
 
                 for mineIndex=1:obj.number_of_mines
@@ -173,12 +181,17 @@ classdef SEMinefield < handle
             obj.resetLayout();
         end
         
-        function update(obj)
+        % ships is an Nx3 or Nx2 array of N ships with x,y or x,y,z
+        % locations.  z is assumed to be 0 (see level) if not included.
+        function update(obj, dt, ships)
             % Update logic for mines can be added here
             for n=1:obj.number_of_mines
-                % Calculate where the ships are perhaps and if something
-                % should be exploded?
-                obj.mines(n).update();
+                mine = obj.mines(n);
+                if mine.isAlive()
+                    pos = mine.getPosition();
+                    envForce = obj.getEnvironmentForce(pos);
+                    mine.update(dt, envForce, ships);
+                end
             end
         end
         
