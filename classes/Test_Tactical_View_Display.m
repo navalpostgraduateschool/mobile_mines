@@ -16,7 +16,7 @@ viewPass = false;
 try
     % Create the app
     % app = mobilemineSim_sp_2025_TacticalSideView();
-    app = mobilemineSim_sp_2025();
+    app = mobilemineSim();
     drawnow;
     pause(0.5);
 
