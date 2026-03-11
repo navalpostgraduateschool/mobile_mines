@@ -1,3 +1,4 @@
 *.asv
 .DS_Store
 results.csv
+tests/se_mobile_mines_log.txt

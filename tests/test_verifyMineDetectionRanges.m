@@ -30,6 +30,7 @@ function test_verifyMineDetectionRanges()
 
         % Disable output to a text handle in the app (if it was enabled)
         logger.setTextHandle([]);
+        logger.setLogToFile(false);
 
         logger.log('INFO', 'App launched successfully.');
 
