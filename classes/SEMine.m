@@ -213,6 +213,29 @@ classdef SEMine < SEBase
             armedStatus = obj.armed;
         end
 
+
+        function [pass, details] = verify(this)
+            % Default verify enforces override requirement
+
+            msg = sprintf('TODO: verify() not implemented in SEMine. Not ready for integration');
+
+            if nargout == 0
+                fprintf('Verification FAILED: %s\n', msg);
+                error('SEBase:VerifyNotImplemented', msg);
+            else
+                pass = false;
+
+                details = struct();
+                details.className = class(this);
+                details.timestamp = datestr(now);
+                details.pass = pass;
+                details.summary = msg;
+                details.metrics = struct();  % metrics allows each subclass to include domain-specific outputs
+                details.notes = '';             
+
+            end
+        end
+        
         function pos = getPosition(obj)
             pos = [obj.pos_x obj.pos_y obj.pos_z];
         end
