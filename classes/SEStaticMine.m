@@ -14,8 +14,7 @@ classdef SEStaticMine < SEMine
 
         function update(obj, dt, force, ships)
 
-            % SMCC TODO: update position based on force and time step.
-
+            % SMCC TODO: update position based on force and time step.            
             update@SEMine(obj, dt, force, ships);
         end
     end
