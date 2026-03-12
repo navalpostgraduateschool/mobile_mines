@@ -51,16 +51,12 @@ classdef SEMinefield < SEBase
         % a 1x2 or 1x3 vector that is passed to obj.environment, an instance
         % of SEEnvironment
         function forceAtPos = getEnvironmentForce(obj, position)
-            
-            %#ok<INUSD>
-            persistent warned
-
-            if isempty(warned)
-                obj.logWarning('SEMineField.getEnvironmentForce not yet implemented. Environment team must provide environment integration.');
-                warned = true;
+            % Ask the SEEnvironment object for the localized physics vector
+            if ~isempty(obj.environment) && isvalid(obj.environment)
+                forceAtPos = obj.environment.forceAt(position);
+            else
+                forceAtPos = [0 0 0]; % Default to zero if ocean is off/disconnected
             end
-
-            forceAtPos = [0.5 1 0];  
         end
 
 
@@ -102,6 +98,11 @@ classdef SEMinefield < SEBase
                 obj.mineType = lower(mineType);
                 obj.reset();
             end
+        end
+
+        function setEnvironment(obj, newEnv)
+            % Safely allows the engine to pass the environment object in
+            obj.environment = newEnv;
         end
 
         function num = getNumUnexplodedMines(obj)
@@ -184,12 +185,21 @@ classdef SEMinefield < SEBase
         % ships is an Nx3 or Nx2 array of N ships with x,y or x,y,z
         % locations.  z is assumed to be 0 (see level) if not included.
         function update(obj, dt, ships)
-            % Update logic for mines can be added here
+            % Iterate through every mine in the field
             for n=1:obj.number_of_mines
                 mine = obj.mines(n);
+                
+                % Only move mines that haven't exploded
                 if mine.isAlive()
+                    % 1. Get current position to calculate local force
                     pos = mine.getPosition();
+                    
+                    % 2. Calculate the Drift Force (U, V) from SEEnvironment
+                    % This uses the Speed and Direction set in your GUI
                     envForce = obj.getEnvironmentForce(pos);
+                    
+                    % 3. Apply both Normal Motion and Environment Impact
+                    % The mine's internal 'update' adds the envForce to its state
                     mine.update(dt, envForce, ships);
                 end
             end

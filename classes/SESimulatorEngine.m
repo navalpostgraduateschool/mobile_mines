@@ -25,6 +25,8 @@ classdef SESimulatorEngine < SEBase
         curSimulationStep = 0;
         maxSimulationSteps = 50;
 
+        oceanEnv; % Instance of SEEnviroment
+
         isRunning = false;
     end
 
@@ -75,6 +77,13 @@ classdef SESimulatorEngine < SEBase
 
         function num = getNumUnexplodedMines(obj)
             num = obj.minefield.getNumUnexplodedMines();
+        end
+
+        function setOceanEnviroment(obj, newEnv)
+            if nargin>1
+                obj.oceanEnv = newEnv; 
+                obj.minefield.setEnvironment(newEnv); % Call the setter function instead!
+            end
         end
 
         % Available ships include those that have not been sunk
