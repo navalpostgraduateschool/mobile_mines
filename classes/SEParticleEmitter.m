@@ -3,16 +3,14 @@ classdef SEParticleEmitter < SEBase
     
     properties
         num_particles = 30; % Number of particles per explosion
-        pos_x;
-        pos_y;
-        vel_x;
-        vel_y;
+        pos; % Nx3 matrix for [x, y, z] positions
+        vel; % Nx3 matrix for [x, y, z] velocities
         lifespan;
-        max_lifespan = 6; % How many frames the explosion lasts
+        max_lifespan = 20; % <-- CHANGED: Increase this to 20 or 30 for a longer effect
         
         graphic_h; % Handle for the scatter plot
         axes_h;
-        env_force = [0, 0]; % [dx, dy] Hook for external ocean currents
+        environment; % Placeholder for the future environment class
         
         is_active = false; % Tracks if the emitter is currently rendering
     end
@@ -24,11 +22,9 @@ classdef SEParticleEmitter < SEBase
                 obj.num_particles = num_parts;
             end
             
-            % Preallocate the coordinate and physics arrays
-            obj.pos_x = nan(obj.num_particles, 1);
-            obj.pos_y = nan(obj.num_particles, 1);
-            obj.vel_x = nan(obj.num_particles, 1);
-            obj.vel_y = nan(obj.num_particles, 1);
+            % Preallocate the coordinate and physics arrays as Nx3 matrices
+            obj.pos = nan(obj.num_particles, 3);
+            obj.vel = nan(obj.num_particles, 3);
             obj.lifespan = zeros(obj.num_particles, 1);
             
             if nargin > 0 && ishandle(axes_handle)
@@ -40,9 +36,11 @@ classdef SEParticleEmitter < SEBase
             obj.axes_h = axes_handle;
             
             % Use low-level 'line' instead of 'scatter' so it doesn't wipe the screen
+            % Note: 'line' supports ZData out of the box
             obj.graphic_h = line('Parent', obj.axes_h, ...
-                'XData', obj.pos_x, ...
-                'YData', obj.pos_y, ...
+                'XData', obj.pos(:, 1), ...
+                'YData', obj.pos(:, 2), ...
+                'ZData', obj.pos(:, 3), ...
                 'LineStyle', 'none', ...
                 'Marker', 'o', ...
                 'MarkerFaceColor', [1 0.5 0], ...
@@ -51,46 +49,57 @@ classdef SEParticleEmitter < SEBase
                 'Visible', 'off');
         end
         
-        function setEnvironmentalForce(obj, forceVector)
-            % Hook for external environment forces (e.g., ocean current)
-            if numel(forceVector) == 2
-                obj.env_force = forceVector;
+        function forceAtPos = getEnvironmentForce(obj, position)
+            % Returns the environment forces applied at position.
+            if ~isempty(obj.environment)
+                % If the engine passed down the environment class, use it!
+                forceAtPos = obj.environment.getForceAtPosition(position);
+            else
+                % Fallback if it hasn't been linked yet
+                persistent warned
+                if isempty(warned)
+                    obj.logWarning('SEParticleEmitter.environment is empty. Falling back to default force.');
+                    warned = true;
+                end
+                forceAtPos = [-5, -5, 0]; 
             end
         end
         
-        function trigger(obj, start_x, start_y, initialVelocity)
+        function trigger(obj, start_pos, initialVelocity)
             % 2. Interface to start the explosion
             obj.is_active = true;
             
+            % Ensure start_pos is a 1x3 vector (pad Z with 0 if needed)
+            if length(start_pos) == 2
+                start_pos = [start_pos(1), start_pos(2), 0];
+            end
+            
             % Recycle particles: reset to the epicenter
-            obj.pos_x(:) = start_x;
-            obj.pos_y(:) = start_y;
+            obj.pos = repmat(start_pos, obj.num_particles, 1);
             obj.lifespan(:) = obj.max_lifespan;
             
-            % Base radial speed for the circular explosion
-            base_speed = 0.02 + rand(obj.num_particles, 1) * 0.05;
+            % CHANGED: Lowered the base radial speed to tighten the 3D explosion radius
+            base_speed = 0.5 + rand(obj.num_particles, 1) * 1.5;
             
-            % Generate angles in a full 360-degree circle
+            % Generate angles in a full 360-degree circle (XY Plane)
             angles = rand(obj.num_particles, 1) * 2 * pi;
             
-            % Calculate base outward (circular) velocities
-            vel_x_radial = cos(angles) .* base_speed;
-            vel_y_radial = sin(angles) .* base_speed;
+            % Calculate base outward velocities in 3D
+            obj.vel(:, 1) = cos(angles) .* base_speed;
+            obj.vel(:, 2) = sin(angles) .* base_speed;
+            obj.vel(:, 3) = (rand(obj.num_particles, 1) - 0.5) .* base_speed; % Slight 3D spray
             
-            % Apply the "wind" or momentum effect based on the incoming velocity
+            % Apply the momentum effect based on the incoming velocity
             if nargin > 3 && ~isempty(initialVelocity)
-                % Scale down the incoming velocity to use as a drift push
-                % (Adjust the 0.03 multiplier to make the wind stronger or weaker)
-                wind_x = initialVelocity(1) * 0.03; 
-                wind_y = initialVelocity(2) * 0.03;
+                % Pad initialVelocity to 1x3 if needed
+                if length(initialVelocity) == 2
+                    initialVelocity = [initialVelocity(1), initialVelocity(2), 0];
+                end
                 
-                % Combine the circular explosion with the directional wind
-                obj.vel_x = vel_x_radial + wind_x;
-                obj.vel_y = vel_y_radial + wind_y;
-            else
-                % Perfect circle if no velocity is provided
-                obj.vel_x = vel_x_radial;
-                obj.vel_y = vel_y_radial;
+                % Combine the circular explosion with the directional momentum
+                obj.vel(:, 1) = obj.vel(:, 1) + (initialVelocity(1) * 0.1);
+                obj.vel(:, 2) = obj.vel(:, 2) + (initialVelocity(2) * 0.1);
+                obj.vel(:, 3) = obj.vel(:, 3) + (initialVelocity(3) * 0.1);
             end
             
             % Show the graphics
@@ -98,7 +107,7 @@ classdef SEParticleEmitter < SEBase
             obj.updateDisplay();
         end
         
-        function update(obj)
+        function update(obj, dt)
             % 3. Lifecycle Update
             if ~obj.is_active
                 return;
@@ -114,13 +123,21 @@ classdef SEParticleEmitter < SEBase
                 return;
             end
             
-            % Apply environmental forces (currents) to velocities
-            obj.vel_x(alive) = obj.vel_x(alive) + obj.env_force(1);
-            obj.vel_y(alive) = obj.vel_y(alive) + obj.env_force(2);
+            % Query the environment force at the explosion epicenter
+            first_alive_idx = find(alive, 1);
+            envForce = obj.getEnvironmentForce(obj.pos(first_alive_idx, :));
             
-            % Apply velocities to positions
-            obj.pos_x(alive) = obj.pos_x(alive) + obj.vel_x(alive);
-            obj.pos_y(alive) = obj.pos_y(alive) + obj.vel_y(alive);
+            % Apply environmental forces to velocities over time (dt)
+            obj.vel(alive, 1) = obj.vel(alive, 1) + (envForce(1) * dt);
+            obj.vel(alive, 2) = obj.vel(alive, 2) + (envForce(2) * dt);
+            obj.vel(alive, 3) = obj.vel(alive, 3) + (envForce(3) * dt);
+            
+            % Heavily damp updates in the z-plane below 0 (i.e. sea level)
+            below_sea = alive & (obj.pos(:, 3) < 0);
+            obj.vel(below_sea, 3) = obj.vel(below_sea, 3) * 0.1;
+            
+            % Apply velocities to positions over time (dt)
+            obj.pos(alive, :) = obj.pos(alive, :) + (obj.vel(alive, :) * dt);
             
             % Decay lifespan
             obj.lifespan(alive) = obj.lifespan(alive) - 1;
@@ -132,7 +149,10 @@ classdef SEParticleEmitter < SEBase
             if ishandle(obj.graphic_h) && obj.is_active
                 alive = obj.lifespan > 0;
                 % Update scatter plot with only living particles
-                set(obj.graphic_h, 'XData', obj.pos_x(alive), 'YData', obj.pos_y(alive));
+                set(obj.graphic_h, ...
+                    'XData', obj.pos(alive, 1), ...
+                    'YData', obj.pos(alive, 2), ...
+                    'ZData', obj.pos(alive, 3));
             end
         end
         
@@ -142,16 +162,16 @@ classdef SEParticleEmitter < SEBase
             pass = true;
             details = struct('className', class(obj), 'pass', true, 'summary', '', 'metrics', struct());
             
-            % Test 1: Instantiation logic
-            if isempty(obj.pos_x) || length(obj.pos_x) ~= obj.num_particles
+            % Test 1: Instantiation logic (Check Nx3 Matrix)
+            if isempty(obj.pos) || size(obj.pos, 1) ~= obj.num_particles || size(obj.pos, 2) ~= 3
                 pass = false;
-                details.summary = 'Failed to initialize particle arrays.';
+                details.summary = 'Failed to initialize 3D particle arrays.';
                 obj.logError(details.summary);
                 return;
             end
             
             % Test 2: Trigger state and lifespan application
-            obj.trigger(5, 5, [1, 0]);
+            obj.trigger([5, 5, 0], [1, 0, 0]);
             if ~obj.is_active || obj.lifespan(1) ~= obj.max_lifespan
                 pass = false;
                 details.summary = 'Trigger method failed to set active state or lifespans.';
@@ -159,13 +179,12 @@ classdef SEParticleEmitter < SEBase
                 return;
             end
             
-            % Test 3: Environmental hook and decay update
-            obj.setEnvironmentalForce([0.1, -0.1]);
-            old_x = obj.pos_x(1);
-            obj.update();
-            if obj.pos_x(1) == old_x || obj.lifespan(1) == obj.max_lifespan
+            % Test 3: Environmental hook and decay update with dt
+            old_x = obj.pos(1, 1);
+            obj.update(0.1); % Pass a dummy dt of 0.1 seconds
+            if obj.pos(1, 1) == old_x || obj.lifespan(1) == obj.max_lifespan
                 pass = false;
-                details.summary = 'Update method failed to alter positions or decay lifespan.';
+                details.summary = 'Update method failed to alter positions using dt or decay lifespan.';
                 obj.logError(details.summary);
                 return;
             end

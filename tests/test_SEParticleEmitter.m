@@ -1,66 +1,61 @@
 % test_SEParticleEmitter.m
-% Standalone test script with an interactive GUI for verification
+% Standalone test script with an interactive GUI for 3D verification
 
 clear; close all; clc;
 
 % 1. Setup the testing environment figure
-fig = figure('Name', 'Particle Emitter Verification Sandbox', 'Color', 'w', 'Position', [100, 100, 600, 500]);
+fig = figure('Name', 'Particle Emitter 3D Verification Sandbox', 'Color', 'w', 'Position', [100, 100, 600, 500]);
 
-% Create the axes for the visual demo (leaving room at the bottom for the button)
-ax = axes('Parent', fig, 'Position', [0.1, 0.25, 0.8, 0.65], 'XLim', [0 10], 'YLim', [0 10]);
+% Create the axes for the visual demo (Added ZLim for 3D)
+ax = axes('Parent', fig, 'Position', [0.1, 0.25, 0.8, 0.65], 'XLim', [0 10], 'YLim', [0 10], 'ZLim', [-2 5]);
+
+% CHANGED: Force the plot into a 3D isometric view so we can see the Z-axis
+view(ax, 3); 
 hold(ax, 'on');
 grid(ax, 'on');
-title(ax, 'SEParticleEmitter Test Sandbox');
+title(ax, 'SEParticleEmitter 3D Test Sandbox');
 
-% 2. Add the Verify Button (Satisfies GUI Engineer Requirement)
+% 2. Add the Verify Button
 btn_verify = uicontrol('Parent', fig, ...
     'Style', 'pushbutton', ...
     'String', 'Run Verification & Demo', ...
     'Position', [200, 30, 200, 50], ...
     'FontSize', 12, ...
     'FontWeight', 'bold', ...
-    'Callback', @runVerificationCallback); % Maps to the function below
+    'Callback', @runVerificationCallback);
 
-% Save the axes handle in the figure's appdata so the callback can access it
+% Save the axes handle
 setappdata(fig, 'TestAxes', ax);
 
 % -------------------------------------------------------------------------
-% Callback Function: Executes when the button is clicked
+% Callback Function
 % -------------------------------------------------------------------------
 function runVerificationCallback(src, ~)
-    % Get the figure and axes
     fig = src.Parent;
     ax = getappdata(fig, 'TestAxes');
-    
-    % Clear previous particles if any
     cla(ax);
     
-    fprintf('--- Starting Verification Contract ---\n');
-    
-    % Instantiate the emitter
+    fprintf('--- Starting 3D Verification Contract ---\n');
     emitter = SEParticleEmitter(ax, 50);
     
-    % Execute the verification contract
+    % Execute the internal verification contract
     [pass, details] = emitter.verify();
     
-    % Provide GUI feedback based on the result
     if pass
         fprintf('Verification PASSED.\n');
+        uiwait(msgbox('SEParticleEmitter Verification PASSED. Click OK to see the 3D visual demonstration.', 'Verification Success', 'help'));
         
-        % CHANGED: Added 'uiwait' so the animation doesn't play until you click OK
-        uiwait(msgbox('SEParticleEmitter Verification PASSED. Click OK to see the visual demonstration.', 'Verification Success', 'help'));
+        fprintf('Running 3D visual demonstration...\n');
         
-        % Run a quick visual demonstration to show the physics
-        fprintf('Running visual demonstration...\n');
+        % CHANGED: Removed the old setEnvironmentalForce call.
+        % CHANGED: Trigger with 1x3 vectors [x, y, z]
+        emitter.trigger([5, 5, 0], [2, 2, 0]); 
         
-        % Set a strong current and a directional velocity for the demo
-        emitter.setEnvironmentalForce([-0.05, -0.05]); 
-        emitter.trigger(5, 5, [2, 2]); 
-        
+        % CHANGED: Animation loop now uses a delta-time (dt) of 0.1
+        dt = 0.1;
         while emitter.is_active
-            emitter.update();
-            % CHANGED: Increased the pause from 0.05 to 0.15 to dramatically slow down the visual frames
-            pause(0.15); 
+            emitter.update(dt);
+            pause(0.05); % Visual frame delay so you can watch it happen
         end
         fprintf('Demonstration complete.\n\n');
         
@@ -69,6 +64,5 @@ function runVerificationCallback(src, ~)
         errordlg(sprintf('Verification FAILED:\n%s', details.summary), 'Verification Failed');
     end
     
-    % Clean up the test object to prevent memory leaks
     delete(emitter);
 end

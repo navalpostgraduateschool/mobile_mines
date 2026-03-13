@@ -17,9 +17,9 @@ classdef SESimulatorEngine < SEBase
 
         % Group 7 (explosions) addition
         activeEmitters = []; % Array to track active particle emitters
-        oceanCurrent = [-0.01, -0.01]; % Simulated ocean current for particles
         currentArrow_h; % <-- NEW: Handle for the visual arrow
         currentText_h;  % <-- NEW: Handle for the text label
+		environment; % <-- NEW: Track the environment class
 
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
@@ -47,6 +47,8 @@ classdef SESimulatorEngine < SEBase
             obj.fleet = SEFleet();            
             % Create minefield
             obj.minefield = SEMinefield();
+			% Create Dummy Environment
+            obj.environment = SEEnvironment(); % <-- NEW
 
             % initialize as applicable based on the number of input arguments
             if nargin>0
@@ -178,10 +180,13 @@ classdef SESimulatorEngine < SEBase
                 x_pos = xlims(1) + 0.85 * (xlims(2) - xlims(1));
                 y_pos = ylims(1) + 0.10 * (ylims(2) - ylims(1));
                 
-                % Scale the arrow purely for visual rendering (so we can see it)
-                visualScale = 40; 
-                u = obj.oceanCurrent(1) * visualScale;
-                v = obj.oceanCurrent(2) * visualScale;
+                % Query the environment force (at a dummy position like [0,0,0])
+                envForce = obj.getEnvironmentForce([0, 0, 0]);
+                
+                % Scale the arrow purely for visual rendering
+                visualScale = 0.5; % Adjust this if the arrow is too big/small!
+                u = envForce(1) * visualScale;
+                v = envForce(2) * visualScale;
                 
                 % Use quiver to draw a directional arrow without wiping the canvas
                 hold(axes_h, 'on'); 
@@ -274,7 +279,7 @@ classdef SESimulatorEngine < SEBase
             for e = length(obj.activeEmitters):-1:1
                 
                 if obj.activeEmitters(e).is_active
-                    obj.activeEmitters(e).update();
+                    obj.activeEmitters(e).update(obj.dt); % <-- ADDED obj.dt
                 else
                     % Clean up finished emitters to free memory
                     delete(obj.activeEmitters(e));
@@ -303,7 +308,7 @@ classdef SESimulatorEngine < SEBase
             minesExploded = false(obj.getNumMines,1);
             
             % NEW: Track the velocity of the ship that hit the mine
-            hitVelocities = zeros(obj.getNumMines, 2); 
+            hitVelocities = zeros(obj.getNumMines, 3); 
 
             for shipIdx = 1:obj.getNumShips()
                 [ship, isValid] = obj.fleet.getShip(shipIdx);
@@ -314,13 +319,13 @@ classdef SESimulatorEngine < SEBase
                         % NEW: Calculate ship's velocity vector to direct the explosion
                         headingRad = ship.heading_deg * pi / 180;
                         % Multiply by a constant to give the explosion velocity scale
-                        shipVelX = cos(headingRad) * 5; 
-                        shipVelY = sin(headingRad) * 5;
+                        shipVelX = cos(headingRad) * 50; % Scaled up to counteract dt 
+                        shipVelY = sin(headingRad) * 50;
 
-                        % Assign this velocity to the mines that were hit
+                        % Assign this velocity to the mines that were hit (Now 3D: x, y, z)
                         hitIdx = find(inMinesDamageRange);
                         for k = 1:length(hitIdx)
-                            hitVelocities(hitIdx(k), :) = [shipVelX, shipVelY];
+                            hitVelocities(hitIdx(k), :) = [shipVelX, shipVelY, 0];
                         end
 
                         minesExploded(inMinesDamageRange) = true;
@@ -339,8 +344,13 @@ classdef SESimulatorEngine < SEBase
                     % NEW: Instantiate and trigger a particle emitter at the mine's location
                     if ~isempty(obj.axes_h) && ishandle(obj.axes_h)
                         newEmitter = SEParticleEmitter(obj.axes_h, 40);
-                        newEmitter.setEnvironmentalForce(obj.oceanCurrent);
-                        newEmitter.trigger(mineObj.pos_x, mineObj.pos_y, hitVelocities(mIdx, :));
+                        
+                        % <-- NEW: Pass the environment object down!
+                        newEmitter.environment = obj.environment; 
+                        
+                        % Format the mine's location as a 1x3 vector [x, y, z]
+                        mineLocation = [mineObj.pos_x, mineObj.pos_y, 0];
+                        newEmitter.trigger(mineLocation, hitVelocities(mIdx, :));
                         
                         % Add to our tracking array
                         obj.activeEmitters = [obj.activeEmitters, newEmitter];
@@ -396,6 +406,14 @@ classdef SESimulatorEngine < SEBase
                 setOn = false;
             end
             obj.debugMode = logical(setOn);
+        end
+		
+		function forceAtPos = getEnvironmentForce(obj, position)
+            if ~isempty(obj.environment)
+                forceAtPos = obj.environment.getForceAtPosition(position);
+            else
+                forceAtPos = [-5, -5, 0];
+            end
         end
         
     end
