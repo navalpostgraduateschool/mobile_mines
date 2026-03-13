@@ -21,6 +21,9 @@ classdef SESideViewTacticalStatus < handle
     %            - Superstructure proportional and forward.
     %
     % 3-06-26: Added sinking logic
+    %
+    % 3-12-26: Added dropdown-facing API so GUI can populate and select
+    %          views directly from this class.
 
     properties
         Axes
@@ -128,7 +131,56 @@ classdef SESideViewTacticalStatus < handle
         end
 
         function name = getViewName(obj)
-            name = obj.viewNames{obj.viewIdx};
+            if obj.viewIdx >= 1 && obj.viewIdx <= numel(obj.viewNames)
+                name = obj.viewNames{obj.viewIdx};
+            else
+                name = obj.viewNames{1};
+            end
+        end
+
+        function viewNames = getViewNames(obj)
+            % 3-12-26: Added so GUI dropdown can populate directly from renderer.
+            viewNames = obj.viewNames;
+        end
+
+        function idx = getViewIndex(obj)
+            % 3-12-26: Added so GUI can query active view index if needed.
+            idx = obj.viewIdx;
+        end
+
+        function setViewIndex(obj, idx)
+            % 3-12-26: Added so GUI can select view by numeric index.
+            if isempty(idx) || ~isscalar(idx) || ~isfinite(idx)
+                return;
+            end
+
+            idx = round(double(idx));
+
+            if idx < 1 || idx > numel(obj.viewNames)
+                return;
+            end
+
+            obj.viewIdx = idx;
+            obj.applyViewPreset();
+        end
+
+        function setViewByName(obj, viewName)
+            % 3-12-26: Added so GUI dropdown can select a view by label.
+            if isempty(viewName)
+                return;
+            end
+
+            if isstring(viewName)
+                viewName = char(viewName);
+            end
+
+            matchIdx = find(strcmpi(viewName, obj.viewNames), 1, 'first');
+            if isempty(matchIdx)
+                return;
+            end
+
+            obj.viewIdx = matchIdx;
+            obj.applyViewPreset();
         end
         % ----------------------------------------------------------
 
