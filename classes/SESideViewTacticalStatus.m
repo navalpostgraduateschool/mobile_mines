@@ -84,7 +84,7 @@ classdef SESideViewTacticalStatus < handle
             180 15;   % 5) Front-Low
         ]
         viewNames cell = {'Iso','Side-X','Side-Y','Top','Front-Low'}
-        viewIdx (1,1) double = 3 % Default view index 
+        viewIdx (1,1) double = 1 % Default view index 
     end
 
     methods
