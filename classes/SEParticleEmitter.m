@@ -6,7 +6,7 @@ classdef SEParticleEmitter < SEBase
         pos; % Nx3 matrix for [x, y, z] positions
         vel; % Nx3 matrix for [x, y, z] velocities
         lifespan;
-        max_lifespan = 20; % <-- CHANGED: Increase this to 20 or 30 for a longer effect
+        max_lifespan = 100; % <-- CHANGED: Increase this to 20 or 30 for a longer effect
         
         graphic_h; % Handle for the scatter plot
         axes_h;
@@ -19,7 +19,8 @@ classdef SEParticleEmitter < SEBase
         function obj = SEParticleEmitter(axes_handle, num_parts)
             % 1. Initialization
             if nargin > 1 && ~isempty(num_parts)
-                obj.num_particles = num_parts;
+                % FIXED: Force scalar integer
+                obj.num_particles = round(double(num_parts(1)));
             end
             
             % Preallocate the coordinate and physics arrays as Nx3 matrices
@@ -79,7 +80,7 @@ classdef SEParticleEmitter < SEBase
             obj.lifespan(:) = obj.max_lifespan;
             
             % CHANGED: Lowered the base radial speed to tighten the 3D explosion radius
-            base_speed = 0.5 + rand(obj.num_particles, 1) * 1.5;
+            base_speed = 1.0 + rand(obj.num_particles, 1) * 2.0;
             
             % Generate angles in a full 360-degree circle (XY Plane)
             angles = rand(obj.num_particles, 1) * 2 * pi;
@@ -97,9 +98,9 @@ classdef SEParticleEmitter < SEBase
                 end
                 
                 % Combine the circular explosion with the directional momentum
-                obj.vel(:, 1) = obj.vel(:, 1) + (initialVelocity(1) * 0.1);
-                obj.vel(:, 2) = obj.vel(:, 2) + (initialVelocity(2) * 0.1);
-                obj.vel(:, 3) = obj.vel(:, 3) + (initialVelocity(3) * 0.1);
+                obj.vel(:, 1) = obj.vel(:, 1) + (initialVelocity(1) * 2.0);
+                obj.vel(:, 2) = obj.vel(:, 2) + (initialVelocity(2) * 2.0);
+                obj.vel(:, 3) = obj.vel(:, 3) + (initialVelocity(3) * 2.0);
             end
             
             % Show the graphics
