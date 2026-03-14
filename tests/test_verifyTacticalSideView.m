@@ -15,8 +15,7 @@ viewPass = false;
 
 try
     % Create the app
-    % app = mobilemineSim_sp_2025_TacticalSideView();
-    app = mobilemineSim();
+    app = verifyTacticalSideView();
     drawnow;
     pause(0.5);
 
@@ -109,7 +108,7 @@ fprintf('Testing View Change: %s\n', passfail(viewPass));
 %% Cleanup
 try
     if ~isempty(app) && isvalid(app)
-        delete(app);
+      %   delete(app);
     end
 catch
 end
