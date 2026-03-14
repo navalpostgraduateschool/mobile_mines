@@ -109,7 +109,7 @@ fprintf('Testing View Change: %s\n', passfail(viewPass));
 %% Cleanup
 try
     if ~isempty(app) && isvalid(app)
-        delete(app);
+      %   delete(app);
     end
 catch
 end
