@@ -2,10 +2,9 @@ classdef SEStaticTetheredMine < SEStaticMine
 
     properties
         anchor = [0,0,-10]
-        tetherLength = 5
+        tetherLength = 2
         tethered = true
-        mass = 1
-        vel = [0,0,0]
+        
     end
 
     methods
@@ -21,7 +20,7 @@ classdef SEStaticTetheredMine < SEStaticMine
             end
 
             if nargin < 3 || isempty(tetherLen0)
-                tetherLen0 = 5;
+                tetherLen0 = 2;
             end
 
             x = pos0(1);
@@ -43,6 +42,20 @@ classdef SEStaticTetheredMine < SEStaticMine
 
         end
 
+        % Overridden setPosition method to update the anchor
+        function didSet = setPosition(obj, x, y, z)
+            % Set the mine's position by calling the superclass method
+            if nargin < 4
+                didSet = setPosition@SEMine(obj, x, y);
+            else
+                didSet = setPosition@SEMine(obj, x, y, z);
+            end
+            
+            % After setting the position, update the anchor to this position.
+            if didSet
+                obj.anchor = obj.getPosition();
+            end
+        end
 
         function releaseTether(obj)
 
@@ -73,7 +86,7 @@ classdef SEStaticTetheredMine < SEStaticMine
             obj.pos_y = 0;
             obj.pos_z = -10;
             obj.anchor = [0 0 -10];
-            obj.tetherLength = 5;
+            obj.tetherLength = 2;
 
             for k = 1:30
                 obj.update(0.1, [5 0 0], []);
@@ -143,7 +156,8 @@ classdef SEStaticTetheredMine < SEStaticMine
             obj.pos_y = newPos(2);
             obj.pos_z = newPos(3);
 
-            update@SEStaticMine(obj,dt,force,ships)
+            % Corrected call to the grandparent's update method for display
+            update@SEMine(obj,dt,force,ships);
 
         end
 

@@ -180,10 +180,10 @@ classdef SEMinefield < SEBase
             
             for n = 1:obj.number_of_mines
                if isequal(mineClass, @SEStaticTetheredMine)
-                    obj.mines(n) = mineClass([0, 0, -10], [0, 0, -10], 5, obj.axes_h);
+                    obj.mines(n) = mineClass([0, 0, -10], [0, 0, -10], 2, obj.axes_h);
         
                 elseif isequal(mineClass, @SEStaticDetectAndReleaseMine)
-                    obj.mines(n) = mineClass([0, 0, -10], [0, 0, -10], 5, 2, obj.axes_h);
+                    obj.mines(n) = mineClass([0, 0, -10], [0, 0, -10], 2, 2, obj.axes_h);
         
                 else
                     obj.mines(n) = mineClass(nan, nan, obj.axes_h);
