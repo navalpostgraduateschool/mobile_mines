@@ -196,14 +196,24 @@ classdef SEMinefield < SEBase
         end
         
         % ships is an Nx3 or Nx2 array of N ships with x,y or x,y,z
-        % locations.  z is assumed to be 0 (see level) if not included.
+        % locations.  z is assumed to be 0 (sea level) if not included.
         function update(obj, dt, ships)
-            % Update logic for mines can be added here
             for n=1:obj.number_of_mines
                 mine = obj.mines(n);
                 if mine.isAlive()
                     pos = mine.getPosition();
-                    envForce = obj.getEnvironmentForce(pos);
+                    fullForce = obj.getEnvironmentForce(pos);
+                    
+                    % The "Tethered Drift" Rule:
+                    % Both Tethered and Detect-and-Release mines need 
+                    % the full force to simulate drifting and buoyancy.
+                    if isa(mine, 'SEStaticTetheredMine') || isa(mine, 'SEMobileMine')
+                        envForce = fullForce;
+                    else
+                        % Purely static mines (like an iron tombstone) stay at [0,0,0]
+                        envForce = [0, 0, 0];
+                    end
+                    
                     mine.update(dt, envForce, ships);
                 end
             end

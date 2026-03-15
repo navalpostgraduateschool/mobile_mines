@@ -9,7 +9,7 @@ classdef SESimulatorEngine < SEBase
         fleet % SEFleet object
         minefield % SEMinefield object
         boundary_box % Boundary box:  [x-coordinate, y-coordinate, width, height]
-        minfield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
+        minefield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
         axes_h % Graphics Handle for axes things will be drawn to
         fps = 10; % desired frames per second
         mineDamageRange % Mine damage radius
@@ -133,10 +133,12 @@ classdef SESimulatorEngine < SEBase
         end
 
         function setBoundaryBox(obj, boundary_box)
+            obj.boundary_box = boundary_box; % <- ADDED THIS LINE
             obj.fleet.setBoundaryBox(boundary_box);
         end
 
         function didSet = setMinefieldBox(obj, minefield_box)
+            obj.minefield_box = minefield_box; % <- ADDED THIS LINE
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
 
@@ -314,6 +316,39 @@ classdef SESimulatorEngine < SEBase
             end
             obj.debugMode = logical(setOn);
         end
+        %ADDED
         
+        
+        function [pass, details] = verify(obj)
+            % 1. Check if we actually have mines initialized
+            if isempty(obj.minefield.mines)
+                pass = false;
+                details = 'No mines found in the field to verify.';
+                return;
+            end
+        
+            % 2. Get the FIRST mine (which represents the current type selected)
+            targetMine = obj.minefield.mines(1); 
+            
+            try
+                % 3. Call the predetermined .verify() method on the SPECIFIC object
+                % If it's a Tethered mine, it calls the Tethered verify.
+                % If it's a DetectAndRelease, it calls that verify.
+                [pass, mineDetails] = targetMine.verify();
+                
+                % 4. Dynamically build the report based on the class name
+                className = class(targetMine);
+                details = sprintf('Verification successful for %s.', className);
+                
+                % If the mine returned a summary in its details struct, use that!
+                if isstruct(mineDetails) && isfield(mineDetails, 'summary')
+                    details = mineDetails.summary;
+                end
+        
+            catch ME
+                pass = false;
+                details = sprintf('Verification Interface Error: %s', ME.message);
+            end
+        end        
     end
 end
