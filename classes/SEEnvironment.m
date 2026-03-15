@@ -47,5 +47,18 @@ classdef SEEnvironment < handle
                     F = [u, v, 0];
             end
         end
+        function [passed, report] = verifyPhysics(obj)
+            % Verification method for the Ocean extension
+            passed = true;
+            report = "Ocean physics verified: Gradient scaling operational.";
+            
+            % Logic check: In Gradient mode, force at bottom boundary must be zero
+            testPos = [obj.boundary(1), obj.boundary(2), 0];
+            F = obj.forceAt(testPos);
+            if any(F ~= 0)
+                passed = false;
+                report = "Physics Error: Non-zero force detected at bottom boundary.";
+            end
+        end 
     end
 end
