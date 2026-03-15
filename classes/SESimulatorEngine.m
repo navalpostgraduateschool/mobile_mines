@@ -319,8 +319,8 @@ classdef SESimulatorEngine < SEBase
                         % NEW: Calculate ship's velocity vector to direct the explosion
                         headingRad = ship.heading_deg * pi / 180;
                         % Multiply by a constant to give the explosion velocity scale
-                        shipVelX = cos(headingRad) * 50; % Scaled up to counteract dt 
-                        shipVelY = sin(headingRad) * 50;
+                        shipVelX = cos(headingRad);
+                        shipVelY = sin(headingRad);
 
                         % Assign this velocity to the mines that were hit (Now 3D: x, y, z)
                         hitIdx = find(inMinesDamageRange);

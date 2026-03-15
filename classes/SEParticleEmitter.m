@@ -91,7 +91,7 @@ classdef SEParticleEmitter < SEBase
             obj.vel(:, 3) = (rand(obj.num_particles, 1) - 0.5) .* base_speed; % Slight 3D spray
             
             % Apply the momentum effect based on the incoming velocity
-            if nargin > 3 && ~isempty(initialVelocity)
+            if nargin >= 3 && ~isempty(initialVelocity)
                 % Pad initialVelocity to 1x3 if needed
                 if length(initialVelocity) == 2
                     initialVelocity = [initialVelocity(1), initialVelocity(2), 0];
