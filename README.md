@@ -17,7 +17,6 @@ This project started at the Naval Postgraduate School as part of the SE4003 Soft
 ### 2026
 Contributors to the project in 2026 include:
 
-
 ### 2025
 Contributors to the project in 2025 include:
 * R. Walczak
