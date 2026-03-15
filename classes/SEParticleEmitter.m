@@ -62,7 +62,7 @@ classdef SEParticleEmitter < SEBase
                     obj.logWarning('SEParticleEmitter.environment is empty. Falling back to default force.');
                     warned = true;
                 end
-                forceAtPos = [-5, -5, 0]; 
+                forceAtPos = [1, 1, 0]; 
             end
         end
         

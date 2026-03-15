@@ -47,8 +47,14 @@ classdef SESimulatorEngine < SEBase
             obj.fleet = SEFleet();            
             % Create minefield
             obj.minefield = SEMinefield();
-			% Create Dummy Environment
-            obj.environment = SEEnvironment(); % <-- NEW
+			% Create Dummy Environment with a defensive fallback
+            try
+                obj.environment = SEEnvironment(); 
+            catch
+                % If the environment team's class is missing or broken, 
+                % leave this empty so the engine uses its built-in fallback.
+                obj.environment = []; 
+            end
 
             % initialize as applicable based on the number of input arguments
             if nargin>0
@@ -412,7 +418,7 @@ classdef SESimulatorEngine < SEBase
             if ~isempty(obj.environment)
                 forceAtPos = obj.environment.getForceAtPosition(position);
             else
-                forceAtPos = [-5, -5, 0];
+                forceAtPos = [1, 1, 0];
             end
         end
         
