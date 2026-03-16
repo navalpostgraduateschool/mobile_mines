@@ -38,19 +38,8 @@ classdef SEShip < SEBase
         end
 
         function delete(obj)
-            try
-                if ~isempty(obj.graphic_h) && all(isgraphics(obj.graphic_h))
-                    delete(obj.graphic_h);
-                end
-            catch
-            end
-        
-            try
-                if ~isempty(obj.heading_h) && all(isgraphics(obj.heading_h))
-                    delete(obj.heading_h);
-                end
-            catch
-            end
+            deleteHandles([obj.graphic_h, obj.heading_h]);
+            delete@handle(obj);
         end
 
         function setStartEndPositions(obj, startPos, endPos)

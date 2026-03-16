@@ -2,7 +2,7 @@ classdef SEMinefield < SEBase
     properties(Constant)
         LAYOUTS = {'uniform','rand','randn','uniform-e','intership-2024'}  % Possible layout
         DEFAULT_BOUNDARY_BOX = [0 0 2 5];
-        MINE_TYPES = {'mobile','static'};
+        MINE_TYPES = {'mobile','static','tethered','detect_release'};
     end
 
     properties
@@ -166,6 +166,12 @@ classdef SEMinefield < SEBase
                     mineClass = @SEMobileMine;
                 case 'static'
                     mineClass = @SEStaticMine; % CHANGE WHEN KAIYA IS DONE
+
+                case 'tethered'
+                    mineClass = @SEStaticTetheredMine;
+                case 'detect_release'
+                    mineClass = @SEStaticDetectAndReleaseMine;
+
                 otherwise
                     warning('Unrecognized mine type ''%s'', mobile mines will be used', obj.mineType);
                     mineClass = @SEMobileMine;
@@ -173,7 +179,15 @@ classdef SEMinefield < SEBase
             obj.mines = repmat(mineClass(),obj.number_of_mines,1);
             
             for n = 1:obj.number_of_mines
-               obj.mines(n) = mineClass(nan, nan,obj.axes_h);
+               if isequal(mineClass, @SEStaticTetheredMine)
+                    obj.mines(n) = mineClass([0, 0, -10], [0, 0, -10], 2, obj.axes_h);
+        
+                elseif isequal(mineClass, @SEStaticDetectAndReleaseMine)
+                    obj.mines(n) = mineClass([0, 0, -10], [0, 0, -10], 2, 2, obj.axes_h);
+        
+                else
+                    obj.mines(n) = mineClass(nan, nan, obj.axes_h);
+                end
             end
 
             % This will update the location of the mines according to the
@@ -182,14 +196,24 @@ classdef SEMinefield < SEBase
         end
         
         % ships is an Nx3 or Nx2 array of N ships with x,y or x,y,z
-        % locations.  z is assumed to be 0 (see level) if not included.
+        % locations.  z is assumed to be 0 (sea level) if not included.
         function update(obj, dt, ships)
-            % Update logic for mines can be added here
             for n=1:obj.number_of_mines
                 mine = obj.mines(n);
                 if mine.isAlive()
                     pos = mine.getPosition();
-                    envForce = obj.getEnvironmentForce(pos);
+                    fullForce = obj.getEnvironmentForce(pos);
+                    
+                    % The "Tethered Drift" Rule:
+                    % Both Tethered and Detect-and-Release mines need 
+                    % the full force to simulate drifting and buoyancy.
+                    if isa(mine, 'SEStaticTetheredMine') || isa(mine, 'SEMobileMine')
+                        envForce = fullForce;
+                    else
+                        % Purely static mines (like an iron tombstone) stay at [0,0,0]
+                        envForce = [0, 0, 0];
+                    end
+                    
                     mine.update(dt, envForce, ships);
                 end
             end
