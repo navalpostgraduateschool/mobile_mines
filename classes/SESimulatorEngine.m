@@ -44,6 +44,9 @@ classdef SESimulatorEngine < SEBase
             % Create minefield
             obj.minefield = SEMinefield();
 
+            %SEEnvironment
+            obj.setOceanEnviroment(SEEnvironment());
+
             % initialize as applicable based on the number of input arguments
             if nargin>0
                 obj.setBoundaryBox(boundary_box);
@@ -143,8 +146,9 @@ classdef SESimulatorEngine < SEBase
 
         function setBoundaryBox(obj, boundary_box)
             obj.fleet.setBoundaryBox(boundary_box);
+            obj.oceanEnv.setBoundaryBox(boundary_box);
         end
-
+          
         function didSet = setMinefieldBox(obj, minefield_box)
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end

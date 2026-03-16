@@ -1,7 +1,7 @@
-classdef SEEnvironment < handle
+classdef SEEnvironment < SEBase
     properties
         boundary = [0 0 6 9]; % [x, y, width, height]
-        speed = 0;
+        speed = 2;
         direction = 0;
         mode = "Constant"; 
         noiseLevel = 0.2; % How chaotic the stochastic mode is
@@ -13,6 +13,22 @@ classdef SEEnvironment < handle
             if nargin > 1, obj.speed = spd; end
             if nargin > 2, obj.direction = dir; end
             if nargin > 3, obj.mode = strtrim(string(md)); end
+        end
+
+        function setBoundaryBox(obj, val)
+            obj.boundary = val;
+        end
+        function setSpeed(obj, val)
+            obj.speed = val;
+        end
+        function setDirection(obj, val)
+            obj.direction = val;
+        end
+        function setMode(obj, val)
+            obj.mode = val;
+        end
+        function setNoiseLevel(obj, val)
+            obj.noiseLevel = val;
         end
 
         function F = forceAt(obj, position)
