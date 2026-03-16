@@ -1,3 +1,3 @@
 mm_pathsetup();
 killall;
-sim = OceanUserInterface();
+sim = mobilemineSim();
