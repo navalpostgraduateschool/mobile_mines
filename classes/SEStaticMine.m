@@ -48,5 +48,6 @@ classdef SEStaticMine < SEMine
 
             update@SEMine(obj, dt, force, ships);
         end
+
     end
 end
