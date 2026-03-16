@@ -14,19 +14,18 @@ classdef SEMobileMine < SEMine
 
 
         function updatePosition(obj, dt, force)
-            % 1. NORMAL MOTION (10% chance random jitter)
+            % Update the position of the mobile mine based on ship position
+            %if true || obj.isAlive() && obj.isArmed() && obj.hasDetected(ship_x, ship_y)
+                % Implement your logic to update position here
+                % Example: Move towards the ship
+                %obj.pos_x = obj.pos_x + obj.dx;
+                %obj.pos_y = obj.pos_y + obj.dy;
             if rand(1) <= 0.1
-                obj.pos_x = obj.pos_x + (rand(1) - 0.5) * obj.dx;
-                obj.pos_y = obj.pos_y + (rand(1) - 0.5) * obj.dy;
+                obj.pos_x = obj.pos_x + (rand(1) - 0.5)*obj.dx;
+                obj.pos_y = obj.pos_y + (rand(1) - 0.5)*obj.dy;
             end
             
-            % 2. ENVIRONMENT IMPACT (Continuous Drift)
-            % 'force' is the [u, v, 0] vector from SEEnvironment
-            % We multiply by dt to ensure drift is proportional to time
-            obj.pos_x = obj.pos_x + force(1) * dt;
-            obj.pos_y = obj.pos_y + force(2) * dt;
         end
-        
         function update(obj, dt, force, ships)
             if obj.isAlive()
                 obj.updatePosition(dt, force);

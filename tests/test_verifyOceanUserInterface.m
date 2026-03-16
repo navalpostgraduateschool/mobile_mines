@@ -9,7 +9,7 @@ function test_verifyOceanEnvironment()
         logger.log('INFO', 'Starting Ocean Environment headless test.');
 
         % Initialize the GUI
-        app = OceanUserInterface(); 
+        app = verifyOceanUserInterface(); 
         drawnow;
 
         %set environment speed
