@@ -31,6 +31,8 @@ classdef SESimulatorEngine < SEBase
         curSimulationStep = 0;
         maxSimulationSteps = 50;
 
+        oceanEnv; % Instance of SEEnviroment
+
         isRunning = false;
     end
 
@@ -55,6 +57,9 @@ classdef SESimulatorEngine < SEBase
                 % leave this empty so the engine uses its built-in fallback.
                 obj.environment = []; 
             end
+
+            %SEEnvironment
+            obj.setOceanEnviroment(SEEnvironment());
 
             % initialize as applicable based on the number of input arguments
             if nargin>0
@@ -97,6 +102,13 @@ classdef SESimulatorEngine < SEBase
 
         function num = getNumUnexplodedMines(obj)
             num = obj.minefield.getNumUnexplodedMines();
+        end
+
+        function setOceanEnviroment(obj, newEnv)
+            if nargin>1
+                obj.oceanEnv = newEnv; 
+                obj.minefield.setEnvironment(newEnv); % Call the setter function instead!
+            end
         end
 
         % Available ships include those that have not been sunk
@@ -157,8 +169,9 @@ classdef SESimulatorEngine < SEBase
         function setBoundaryBox(obj, boundary_box)
             obj.boundary_box = boundary_box; % <- ADDED THIS LINE
             obj.fleet.setBoundaryBox(boundary_box);
+            obj.oceanEnv.setBoundaryBox(boundary_box);
         end
-
+          
         function didSet = setMinefieldBox(obj, minefield_box)
             obj.minefield_box = minefield_box; % <- ADDED THIS LINE
             didSet = obj.minefield.setBoundaryBox(minefield_box);

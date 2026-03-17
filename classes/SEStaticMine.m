@@ -34,6 +34,15 @@ classdef SEStaticMine < SEMine
                 return
             end
 
+            if obj.isAlive()
+                % 1. ENVIRONMENT IMPACT (Continuous Drift)
+                % 'force' is the [u, v, 0] vector from SEEnvironment
+                % We multiply by dt to ensure drift is proportional to time
+                obj.pos_x = obj.pos_x + force(1) * dt;
+                obj.pos_y = obj.pos_y + force(2) * dt;
+            end
+            
+            
             f = zeros(1,3);
             f(1:min(3,numel(force))) = force(:).';
 
@@ -46,6 +55,7 @@ classdef SEStaticMine < SEMine
             obj.pos_y = newPos(2);
             obj.pos_z = newPos(3);
 
+            % Update position based on force and time step. This is a simple physics update: F = m*a => a = F/m, and then we update velocity and position.
             update@SEMine(obj, dt, force, ships);
         end
 

@@ -51,16 +51,20 @@ classdef SEMinefield < SEBase
         % a 1x2 or 1x3 vector that is passed to obj.environment, an instance
         % of SEEnvironment
         function forceAtPos = getEnvironmentForce(obj, position)
-            
-            %#ok<INUSD>
-            persistent warned
-
-            if isempty(warned)
-                obj.logWarning('SEMineField.getEnvironmentForce not yet implemented. Environment team must provide environment integration.');
-                warned = true;
+            % Ask the SEEnvironment object for the localized physics vector
+            if ~isempty(obj.environment) && isvalid(obj.environment)
+                forceAtPos = obj.environment.forceAt(position);
+            else
+                forceAtPos = [0 0 0]; % Default to zero if ocean is off/disconnected
             end
+        end
 
-            forceAtPos = [0.5 1 0];  
+
+        function setEnvironment(obj, newEnv)
+            % Safely allows the engine to pass the environment object in
+            if isempty(newEnv) || isa(newEnv,'SEEnvironment')
+                obj.environment = newEnv;
+            end
         end
 
 
@@ -166,12 +170,10 @@ classdef SEMinefield < SEBase
                     mineClass = @SEMobileMine;
                 case 'static'
                     mineClass = @SEStaticMine; % CHANGE WHEN KAIYA IS DONE
-
                 case 'tethered'
                     mineClass = @SEStaticTetheredMine;
                 case 'detect_release'
                     mineClass = @SEStaticDetectAndReleaseMine;
-
                 otherwise
                     warning('Unrecognized mine type ''%s'', mobile mines will be used', obj.mineType);
                     mineClass = @SEMobileMine;
@@ -198,23 +200,33 @@ classdef SEMinefield < SEBase
         % ships is an Nx3 or Nx2 array of N ships with x,y or x,y,z
         % locations.  z is assumed to be 0 (sea level) if not included.
         function update(obj, dt, ships)
+            % Iterate through every mine in the field
             for n=1:obj.number_of_mines
                 mine = obj.mines(n);
                 if mine.isAlive()
+
+                    % 1. Get current position to calculate local force
                     pos = mine.getPosition();
-                    fullForce = obj.getEnvironmentForce(pos);
-                    
-                    % The "Tethered Drift" Rule:
-                    % Both Tethered and Detect-and-Release mines need 
-                    % the full force to simulate drifting and buoyancy.
-                    if isa(mine, 'SEStaticTetheredMine') || isa(mine, 'SEMobileMine')
-                        envForce = fullForce;
-                    else
-                        % Purely static mines (like an iron tombstone) stay at [0,0,0]
-                        envForce = [0, 0, 0];
-                    end
-                    
+
+                    % 2. Calculate the Drift Force (U, V) from SEEnvironment
+                    % This uses the Speed and Direction set in your GUI
+                    envForce = obj.getEnvironmentForce(pos);
+
+                    % 3. Apply both Normal Motion and Environment Impact
+                    % The mine's internal 'update' adds the envForce to its state
                     mine.update(dt, envForce, ships);
+
+                    % This should be handled in the respective mine class.
+                    % % The "Tethered Drift" Rule:
+                    % % Both Tethered and Detect-and-Release mines need 
+                    % % the full force to simulate drifting and buoyancy.
+                    % if isa(mine, 'SEStaticTetheredMine') || isa(mine, 'SEMobileMine')
+                    %     envForce = fullForce;
+                    % else
+                    %     % Purely static mines (like an iron tombstone) stay at [0,0,0]
+                    %     envForce = [0, 0, 0];
+                    % end                   
+                    
                 end
             end
         end
@@ -537,4 +549,3 @@ classdef SEMinefield < SEBase
         end
     end
 end
-
