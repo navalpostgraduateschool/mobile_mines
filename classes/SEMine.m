@@ -45,14 +45,16 @@ classdef SEMine < SEBase
         end
 
         function delete(obj)
-            try
-                h = [obj.graphic_h obj.detonation_h];
-                h = h(isgraphics(h));
-                if ~isempty(h)
-                    delete(h);
-                end
-            catch
-            end
+            % deleteHandles is a custom function.
+            deleteHandles(obj.graphic_h);
+            deleteHandles(obj.detonation_h);
+            deleteHandles(obj.detRangeGraphic);
+            deleteHandles(obj.detRangeGraphic);
+
+            % This is the superclass method for delete the object, which we
+            % need to specifiy explicitly since we have overloaded the
+            % method.
+            delete@handle(obj);
         end
 
         % Can  be used to assign an axes handle for the mine to be renderd

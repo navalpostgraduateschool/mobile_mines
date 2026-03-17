@@ -9,11 +9,17 @@ classdef SESimulatorEngine < SEBase
         fleet % SEFleet object
         minefield % SEMinefield object
         boundary_box % Boundary box:  [x-coordinate, y-coordinate, width, height]
-        minfield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
+        minefield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
         axes_h % Graphics Handle for axes things will be drawn to
         fps = 10; % desired frames per second
         mineDamageRange % Mine damage radius
         minedetectRange % mine detection range
+
+        % Group 7 (explosions) addition
+        activeEmitters = []; % Array to track active particle emitters
+        currentArrow_h; % <-- NEW: Handle for the visual arrow
+        currentText_h;  % <-- NEW: Handle for the text label
+		environment; % <-- NEW: Track the environment class
 
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
@@ -43,6 +49,14 @@ classdef SESimulatorEngine < SEBase
             obj.fleet = SEFleet();            
             % Create minefield
             obj.minefield = SEMinefield();
+			% Create Dummy Environment with a defensive fallback
+            try
+                obj.environment = SEEnvironment(); 
+            catch
+                % If the environment team's class is missing or broken, 
+                % leave this empty so the engine uses its built-in fallback.
+                obj.environment = []; 
+            end
 
             %SEEnvironment
             obj.setOceanEnviroment(SEEnvironment());
@@ -64,6 +78,14 @@ classdef SESimulatorEngine < SEBase
             obj.fleet.reset();
             obj.minefield.reset();
             obj.curSimulationStep = 0;
+
+            % Group 7 addition: Clear any active emitters from previous runs
+            for e = 1:length(obj.activeEmitters)
+                delete(obj.activeEmitters(e));
+            end
+            obj.activeEmitters = [];
+            % end Group 7 (explosion) addition
+
         end
 
         function displayShipHeadings(obj, shouldDisplay)
@@ -145,11 +167,13 @@ classdef SESimulatorEngine < SEBase
         end
 
         function setBoundaryBox(obj, boundary_box)
+            obj.boundary_box = boundary_box; % <- ADDED THIS LINE
             obj.fleet.setBoundaryBox(boundary_box);
             obj.oceanEnv.setBoundaryBox(boundary_box);
         end
           
         function didSet = setMinefieldBox(obj, minefield_box)
+            obj.minefield_box = minefield_box; % <- ADDED THIS LINE
             didSet = obj.minefield.setBoundaryBox(minefield_box);
         end
 
@@ -162,8 +186,38 @@ classdef SESimulatorEngine < SEBase
         end
 
         function setAxesHandle(obj, axes_h)
+            % Next line is New code for Team 7
+            obj.axes_h = axes_h; % <-- NEW: Save the handle for the engine to use!
             obj.fleet.setAxesHandle(axes_h);
             obj.minefield.setAxesHandle(axes_h);
+
+            % NEW: Draw the ocean current indicator in the bottom right corner
+            if isempty(obj.currentArrow_h) || ~ishandle(obj.currentArrow_h)
+                % Get the current limits of the axes to place the arrow dynamically
+                xlims = get(axes_h, 'XLim');
+                ylims = get(axes_h, 'YLim');
+                
+                % Position at 85% of X width, and 10% of Y height (Bottom Right)
+                x_pos = xlims(1) + 0.85 * (xlims(2) - xlims(1));
+                y_pos = ylims(1) + 0.10 * (ylims(2) - ylims(1));
+                
+                % Query the environment force (at a dummy position like [0,0,0])
+                envForce = obj.getEnvironmentForce([0, 0, 0]);
+                
+                % Scale the arrow purely for visual rendering
+                visualScale = 0.5; % Adjust this if the arrow is too big/small!
+                u = envForce(1) * visualScale;
+                v = envForce(2) * visualScale;
+                
+                % Use quiver to draw a directional arrow without wiping the canvas
+                hold(axes_h, 'on'); 
+                obj.currentArrow_h = quiver(axes_h, x_pos, y_pos, u, v, 0, ...
+                    'Color', '#0072BD', 'LineWidth', 2, 'MaxHeadSize', 2);
+                
+                % Add a label nearby
+                obj.currentText_h = text(axes_h, x_pos, y_pos - (0.05 * (ylims(2) - ylims(1))), 'Current', ...
+                    'Color', '#0072BD', 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+            end
         end
 
         function behaviors = getValidFleetBehaviors(obj)
@@ -242,6 +296,18 @@ classdef SESimulatorEngine < SEBase
             % Check for mine detonations
             obj.detectMineDetonations();
 
+            % Group 7 (explosions) addition: Update active particle emitters
+            for e = length(obj.activeEmitters):-1:1
+                
+                if obj.activeEmitters(e).is_active
+                    obj.activeEmitters(e).update(obj.dt); % <-- ADDED obj.dt
+                else
+                    % Clean up finished emitters to free memory
+                    delete(obj.activeEmitters(e));
+                    obj.activeEmitters(e) = [];
+                end
+            end
+
             if obj.animate
                 pause(obj.dt);
             end
@@ -256,15 +322,34 @@ classdef SESimulatorEngine < SEBase
         function updateFleetPosition(obj)
             obj.fleet.updatePosition();
         end
-        
-        function detectMineDetonations(obj)
+
+    % Entire function updated by Team 7 (explosions) 
+
+    function detectMineDetonations(obj)
             minesExploded = false(obj.getNumMines,1);
+            
+            % NEW: Track the velocity of the ship that hit the mine
+            hitVelocities = zeros(obj.getNumMines, 3); 
+
             for shipIdx = 1:obj.getNumShips()
                 [ship, isValid] = obj.fleet.getShip(shipIdx);
                 if isValid
-                    [inMinesDamageRange, inMinesDetectionRange, distances] = obj.minefield.getMineRanges(ship);
 
+                    [inMinesDamageRange, ~, ~] = obj.minefield.getMineRanges(ship);
+                    % [inMinesDamageRange, inMinesDetectionRange, distances] = obj.minefield.getMineRanges(ship);
                     if any(inMinesDamageRange)
+                        % NEW: Calculate ship's velocity vector to direct the explosion
+                        headingRad = ship.heading_deg * pi / 180;
+                        % Multiply by a constant to give the explosion velocity scale
+                        shipVelX = cos(headingRad);
+                        shipVelY = sin(headingRad);
+
+                        % Assign this velocity to the mines that were hit (Now 3D: x, y, z)
+                        hitIdx = find(inMinesDamageRange);
+                        for k = 1:length(hitIdx)
+                            hitVelocities(hitIdx(k), :) = [shipVelX, shipVelY, 0];
+                        end
+
                         minesExploded(inMinesDamageRange) = true;
                         ship.sink();
                     end
@@ -274,10 +359,27 @@ classdef SESimulatorEngine < SEBase
             if any(minesExploded)
                 mineIdx = find(minesExploded);
                 for n=1:numel(mineIdx)
-                    obj.minefield.mines( mineIdx(n)).explode();
+                    mIdx = mineIdx(n);
+                    mineObj = obj.minefield.mines(mIdx);
+                    mineObj.explode();
+                    
+                    % NEW: Instantiate and trigger a particle emitter at the mine's location
+                    if ~isempty(obj.axes_h) && ishandle(obj.axes_h)
+                        newEmitter = SEParticleEmitter(obj.axes_h, 40);
+                        
+                        % <-- NEW: Pass the environment object down!
+                        newEmitter.environment = obj.environment; 
+                        
+                        % Format the mine's location as a 1x3 vector [x, y, z]
+                        mineLocation = [mineObj.pos_x, mineObj.pos_y, 0];
+                        newEmitter.trigger(mineLocation, hitVelocities(mIdx, :));
+                        
+                        % Add to our tracking array
+                        obj.activeEmitters = [obj.activeEmitters, newEmitter];
+                    end
                 end
             end
-        end        
+    end
 
         function changeFleetBehavior(obj, newBehavior)
             obj.fleet.changeBehavior(newBehavior);
@@ -327,6 +429,48 @@ classdef SESimulatorEngine < SEBase
             end
             obj.debugMode = logical(setOn);
         end
+		
+		function forceAtPos = getEnvironmentForce(obj, position)
+            if ~isempty(obj.environment)
+                forceAtPos = obj.environment.getForceAtPosition(position);
+            else
+                forceAtPos = [1, 1, 0];
+            end
+        end
+
+        %ADDED
+        function [pass, details] = verify(obj)
+            % 1. Check if we actually have mines initialized
+            if isempty(obj.minefield.mines)
+                pass = false;
+                details = 'No mines found in the field to verify.';
+                return;
+            end
+        
+            % 2. Get the FIRST mine (which represents the current type selected)
+            targetMine = obj.minefield.mines(1); 
+            
+            try
+                % 3. Call the predetermined .verify() method on the SPECIFIC object
+                % If it's a Tethered mine, it calls the Tethered verify.
+                % If it's a DetectAndRelease, it calls that verify.
+                [pass, mineDetails] = targetMine.verify();
+                
+                % 4. Dynamically build the report based on the class name
+                className = class(targetMine);
+                details = sprintf('Verification successful for %s.', className);
+                
+                % If the mine returned a summary in its details struct, use that!
+                if isstruct(mineDetails) && isfield(mineDetails, 'summary')
+                    details = mineDetails.summary;
+                end
+        
+            catch ME
+                pass = false;
+                details = sprintf('Verification Interface Error: %s', ME.message);
+            end
+        end  
         
     end
+
 end
