@@ -31,7 +31,14 @@ classdef SEEnvironment < SEBase
             obj.noiseLevel = val;
         end
 
-        function F = forceAt(obj, position)
+        % Alias for getForceAtPosition.
+        % Can remove once SE4003 WI 26 completes.
+        function F = forceAt(obj, varargin)
+            F = obj.getForceAtPosition(varargin{:});
+        end
+
+        function F = getForceAtPosition(obj, position)
+        
             % 1. Calculate the base U and V vectors from Speed and Direction
             u = obj.speed * cosd(obj.direction)/10;
             v = obj.speed * sind(obj.direction)/10;
@@ -63,6 +70,7 @@ classdef SEEnvironment < SEBase
                     F = [u, v, 0];
             end
         end
+
         function [passed, report] = verifyPhysics(obj)
             % Verification method for the Ocean extension
             passed = true;
