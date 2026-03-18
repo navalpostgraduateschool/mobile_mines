@@ -1,4 +1,4 @@
-function test_verifyOceanEnvironment()
+function test_verifyOceanUserInterface()
     % Headless driver
     app = [];
     logger = [];

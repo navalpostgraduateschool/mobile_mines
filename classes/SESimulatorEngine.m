@@ -2,7 +2,7 @@ classdef SESimulatorEngine < SEBase
     events
         SimUpdated;% StepEnded;  % each simulation has a number of steps/updates (iterations)
         SimCompleted; % monte carlo simulations consist of a number of simulations;
-        MonteCarloFinished% 
+        MonteCarloFinished; % 
     end
 
     properties(SetAccess=protected)
@@ -42,7 +42,7 @@ classdef SESimulatorEngine < SEBase
     
     methods
 
-        function obj = SESimulatorEngine(boundary_box, axes_handle)
+        function obj = SESimulatorEngine(boundary_box, minefield_box, axes_handle)
             narginchk(0, 2);
 
             % Create fleet
@@ -64,10 +64,13 @@ classdef SESimulatorEngine < SEBase
             % initialize as applicable based on the number of input arguments
             if nargin>0
                 obj.setBoundaryBox(boundary_box);
-                obj.setMinefieldBox(minefield_box);
-
                 if nargin>1
-                    obj.setAxesHandle(axes_handle);
+
+                    obj.setMinefieldBox(minefield_box);
+
+                    if nargin>2
+                        obj.setAxesHandle(axes_handle);
+                    end
                 end
             end            
         end
@@ -134,32 +137,57 @@ classdef SESimulatorEngine < SEBase
                 numSimulationsToRun = obj.numSimulations;
             end
 
-            % make sure we aren't dealing with rational/decimal numbers
             obj.numSimulations = floor(numSimulationsToRun);
-
             obj.isRunning = true;
 
             for simulationNum = 1:obj.numSimulations
+                if ~isvalid(obj) || ~obj.isRunning
+                    break;
+                end
+
                 obj.curSimulation = simulationNum;
                 obj.reset();
-                while ~obj.simulationDone() && obj.isRunning
+
+                while isvalid(obj) && obj.isRunning && ~obj.simulationDone()
                     obj.update();
+
+                    if ~isvalid(obj) || ~obj.isRunning
+                        break;
+                    end
+
                     obj.notify('SimUpdated');
                 end
+
+                if ~isvalid(obj) || ~obj.isRunning
+                    break;
+                end
+
                 obj.notify('SimCompleted');
             end
-            obj.notify('MonteCarloFinished');
 
-            obj.isRunning = false;
+            if isvalid(obj) && obj.isRunning
+                obj.notify('MonteCarloFinished');
+            end
+
+            if isvalid(obj)
+                obj.isRunning = false;
+            end
         end
 
-        function isDone = simulationDone(obj)
-            maxSteps = obj.maxSimulationSteps*obj.fps*obj.time_multiplier;
+        function didSet = setTimeLimit(obj, timeLimitSeconds)
+            didSet = false;
+            if nargin > 1 && ~isempty(timeLimitSeconds) && isnumeric(timeLimitSeconds) && isfinite(timeLimitSeconds) && timeLimitSeconds >= 0
+                obj.maxSimulationSteps = floor(timeLimitSeconds * obj.fps);
+                didSet = true;
+            end
+        end
+
+        function isDone = simulationDone(obj)            
             numShipsLeft = obj.getNumShipsRemaining();
             numMinesLeft = obj.getNumUnexplodedMines();
             isDone = 0 == numShipsLeft || ...
                 0 == numMinesLeft || ...
-                obj.curSimulationStep >= maxSteps;
+                obj.curSimulationStep >= obj.maxSimulationSteps;
         end
 
         function num = getNumShipsRemaining(obj)
@@ -286,19 +314,19 @@ classdef SESimulatorEngine < SEBase
             % Update fleet position
 
             obj.fleet.update(obj.dt);
-            
+
 
             ships = obj.fleet.getActiveShipPositions();
 
             % Update minefield
             obj.minefield.update(obj.dt, ships)
-            
+
             % Check for mine detonations
             obj.detectMineDetonations();
 
             % Group 7 (explosions) addition: Update active particle emitters
             for e = length(obj.activeEmitters):-1:1
-                
+
                 if obj.activeEmitters(e).is_active
                     obj.activeEmitters(e).update(obj.dt); % <-- ADDED obj.dt
                 else
@@ -313,7 +341,7 @@ classdef SESimulatorEngine < SEBase
             end
             obj.curSimulationStep = obj.curSimulationStep + 1;
         end
-        
+
         function refreshDisplay(obj)
             obj.minefield.refreshDisplay();
             obj.fleet.refreshDisplay();
@@ -323,13 +351,13 @@ classdef SESimulatorEngine < SEBase
             obj.fleet.updatePosition();
         end
 
-    % Entire function updated by Team 7 (explosions) 
+        % Entire function updated by Team 7 (explosions)
 
-    function detectMineDetonations(obj)
+        function detectMineDetonations(obj)
             minesExploded = false(obj.getNumMines,1);
-            
+
             % NEW: Track the velocity of the ship that hit the mine
-            hitVelocities = zeros(obj.getNumMines, 3); 
+            hitVelocities = zeros(obj.getNumMines, 3);
 
             for shipIdx = 1:obj.getNumShips()
                 [ship, isValid] = obj.fleet.getShip(shipIdx);
@@ -362,24 +390,24 @@ classdef SESimulatorEngine < SEBase
                     mIdx = mineIdx(n);
                     mineObj = obj.minefield.mines(mIdx);
                     mineObj.explode();
-                    
+
                     % NEW: Instantiate and trigger a particle emitter at the mine's location
                     if ~isempty(obj.axes_h) && ishandle(obj.axes_h)
                         newEmitter = SEParticleEmitter(obj.axes_h, 40);
-                        
+
                         % <-- NEW: Pass the environment object down!
-                        newEmitter.environment = obj.environment; 
-                        
+                        newEmitter.environment = obj.environment;
+
                         % Format the mine's location as a 1x3 vector [x, y, z]
                         mineLocation = [mineObj.pos_x, mineObj.pos_y, 0];
                         newEmitter.trigger(mineLocation, hitVelocities(mIdx, :));
-                        
+
                         % Add to our tracking array
                         obj.activeEmitters = [obj.activeEmitters, newEmitter];
                     end
                 end
             end
-    end
+        end
 
         function changeFleetBehavior(obj, newBehavior)
             obj.fleet.changeBehavior(newBehavior);
@@ -437,6 +465,30 @@ classdef SESimulatorEngine < SEBase
                 forceAtPos = [1, 1, 0];
             end
         end
+
+
+        function delete(obj)
+            obj.stop();
+
+            for e = numel(obj.activeEmitters):-1:1
+                if isvalid(obj.activeEmitters(e))
+                    delete(obj.activeEmitters(e));
+                end
+            end
+            obj.activeEmitters = [];
+
+            if ~isempty(obj.currentArrow_h) && isgraphics(obj.currentArrow_h)
+                delete(obj.currentArrow_h);
+            end
+            obj.currentArrow_h = [];
+
+            if ~isempty(obj.currentText_h) && isgraphics(obj.currentText_h)
+                delete(obj.currentText_h);
+            end
+            obj.currentText_h = [];
+        end
+
+
 
         %ADDED
         function [pass, details] = verify(obj)
