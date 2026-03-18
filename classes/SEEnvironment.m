@@ -1,7 +1,7 @@
 classdef SEEnvironment < SEBase
     properties
         boundary = [0 0 6 9]; % [x, y, width, height]
-        speed = 2;
+        speed = 1;
         direction = 0;
         mode = "Constant"; 
         noiseLevel = 0.2; % How chaotic the stochastic mode is        
@@ -87,7 +87,7 @@ classdef SEEnvironment < SEBase
             end
         end
 
-        function spec = getCompassSpec(obj)
+        function spec = getCompassSpec(obj, anchorX, anchorY)
             % Returns a compact drawing spec for a fixed-size compass/vector overlay.
             % This stays UI-agnostic: it only returns numbers/labels/state.
 
@@ -98,6 +98,14 @@ classdef SEEnvironment < SEBase
             spec.anchorX = 5.25;
             spec.anchorY = 1.25;
             spec.radius  = 0.5;
+
+
+            if nargin>0
+                spec.anchorX = anchorX;
+                if nargin>1
+                    spec.anchorY = anchorY;
+                end
+            end            
 
             % Compass ring
             theta = linspace(0, 2*pi, 100);

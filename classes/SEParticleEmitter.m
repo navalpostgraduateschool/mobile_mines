@@ -41,7 +41,7 @@ classdef SEParticleEmitter < SEBase
         end
 
         function setMaxLifespan(obj, n)
-            if nargin>1 && ~isempty && isnumeric(n) && n>0
+            if nargin>1 && ~isempty(n) && isnumeric(n) && n>0
                 obj.max_lifespan = n;
             end
         end

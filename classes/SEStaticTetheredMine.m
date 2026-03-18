@@ -12,7 +12,7 @@ classdef SEStaticTetheredMine < SEStaticMine
         function obj = SEStaticTetheredMine(pos0, anchor0, tetherLen0, varargin)
 
             if nargin < 1 || isempty(pos0)
-                pos0 = [0,0,-10];
+                pos0 = [0,0, -10];
             end
 
             if nargin < 2 || isempty(anchor0)
@@ -32,7 +32,7 @@ classdef SEStaticTetheredMine < SEStaticMine
                 z = -10;
             end
 
-            obj@SEStaticMine(x,y,varargin{:});
+            obj@SEStaticMine(x,y,varargin{:});       
             obj.pos_z = z;
 
             obj.anchor = anchor0(:).';

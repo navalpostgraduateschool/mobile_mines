@@ -692,7 +692,25 @@ classdef SESideViewTacticalStatus < handle
         function drawMineGroup(obj, parentGroup, mine)
             [sx, sy, sz] = sphere(10);
             r = obj.MineRadius;
-            zCenter = obj.WaterZ;
+
+            % Normalize depth into visible band
+            zRaw = mine.pos_z;
+
+            if zRaw < obj.WaterZ
+                % choose a reference max depth (tunable)
+                zMaxDepth = -10;   % deepest expected mine depth
+
+                % clamp
+                zRaw = max(zRaw, zMaxDepth);
+
+                % normalize to [0,1]
+                t = (zRaw - zMaxDepth) / (obj.WaterZ - zMaxDepth);
+
+                % map into visual band
+                zCenter = obj.OceanFloorZ + t * (obj.WaterZ - obj.OceanFloorZ);
+            else
+                zCenter = obj.WaterZ;
+            end
 
             if mine.alive
                 fc = [0.72 0.12 0.12];

@@ -11,6 +11,7 @@ classdef SESimulatorEngine < SEBase
         boundary_box % Boundary box:  [x-coordinate, y-coordinate, width, height]
         minefield_box % Minefield box: [x-coordinate, y-coordinate, width, height]
         axes_h % Graphics Handle for axes things will be drawn to
+        tactical_axes_h;
         fps = 10; % desired frames per second
         mineDamageRange % Mine damage radius
         minedetectRange % mine detection range
@@ -206,6 +207,10 @@ classdef SESimulatorEngine < SEBase
             end 
         end
 
+        function setTacticalAxesHandle(obj, axes_h)
+            obj.tactical_axes_h = axes_h;
+        end
+
         function setAxesHandle(obj, axes_h)
             % Next line is New code for Team 7
             obj.axes_h = axes_h; % <-- NEW: Save the handle for the engine to use!
@@ -356,20 +361,25 @@ classdef SESimulatorEngine < SEBase
                     mineObj = obj.minefield.mines(mIdx);
                     mineObj.explode();
 
-                    % NEW: Instantiate and trigger a particle emitter at the mine's location
-                    if ~isempty(obj.axes_h) && ishandle(obj.axes_h)
-                        newEmitter = SEParticleEmitter(obj.axes_h, 40, 3*obj.fps);
+                    axes_handles = [obj.axes_h, obj.tactical_axes_h];
+                    for h = 1:numel(axes_handles)
+                        ax_h = axes_handles(h);
+                        % NEW: Instantiate and trigger a particle emitter at the mine's location
+                        if ~isempty(ax_h) && ishandle(ax_h)
+                            newEmitter = SEParticleEmitter(ax_h, 40, 1*obj.fps);
 
-                        % <-- NEW: Pass the environment object down!
-                        newEmitter.environment = obj.oceanEnv;
+                            % <-- NEW: Pass the environment object down!
+                            newEmitter.environment = obj.oceanEnv;
 
-                        % Format the mine's location as a 1x3 vector [x, y, z]
-                        mineLocation = [mineObj.pos_x, mineObj.pos_y, 0];
-                        newEmitter.trigger(mineLocation, hitVelocities(mIdx, :));
+                            % Format the mine's location as a 1x3 vector [x, y, z]
+                            mineLocation = [mineObj.pos_x, mineObj.pos_y, 0];
+                            newEmitter.trigger(mineLocation, hitVelocities(mIdx, :));
 
-                        % Add to our tracking array
-                        obj.activeEmitters = [obj.activeEmitters, newEmitter];
+                            % Add to our tracking array
+                            obj.activeEmitters = [obj.activeEmitters, newEmitter];
+                        end
                     end
+
                 end
             end
         end
