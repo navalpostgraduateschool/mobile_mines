@@ -19,7 +19,6 @@ classdef SESimulatorEngine < SEBase
         activeEmitters = []; % Array to track active particle emitters
         currentArrow_h; % <-- NEW: Handle for the visual arrow
         currentText_h;  % <-- NEW: Handle for the text label
-		environment; % <-- NEW: Track the environment class
 
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
@@ -29,7 +28,7 @@ classdef SESimulatorEngine < SEBase
         numSimulations = 1;  % The number of simulations to run
 
         curSimulationStep = 0;
-        maxSimulationSteps = 50;
+        maxSimulationSteps = 200; % ~ 20s
 
         oceanEnv; % Instance of SEEnviroment
 
@@ -49,15 +48,7 @@ classdef SESimulatorEngine < SEBase
             obj.fleet = SEFleet();            
             % Create minefield
             obj.minefield = SEMinefield();
-			% Create Dummy Environment with a defensive fallback
-            try
-                obj.environment = SEEnvironment(); 
-            catch
-                % If the environment team's class is missing or broken, 
-                % leave this empty so the engine uses its built-in fallback.
-                obj.environment = []; 
-            end
-
+            
             %SEEnvironment
             obj.setOceanEnviroment(SEEnvironment());
 
@@ -109,8 +100,12 @@ classdef SESimulatorEngine < SEBase
 
         function setOceanEnviroment(obj, newEnv)
             if nargin>1
-                obj.oceanEnv = newEnv; 
-                obj.minefield.setEnvironment(newEnv); % Call the setter function instead!
+                if isempty(newEnv) || isa(newEnv,'SEEnvironment')
+                    obj.oceanEnv = newEnv; 
+                    obj.minefield.setEnvironment(newEnv); % Call the setter function instead!
+                else
+                    obj.logWarning('Unknown type attempted to be set for ocean environment: %s', class(newEnv));
+                end
             end
         end
 
@@ -393,10 +388,10 @@ classdef SESimulatorEngine < SEBase
 
                     % NEW: Instantiate and trigger a particle emitter at the mine's location
                     if ~isempty(obj.axes_h) && ishandle(obj.axes_h)
-                        newEmitter = SEParticleEmitter(obj.axes_h, 40);
+                        newEmitter = SEParticleEmitter(obj.axes_h, 40, 3*obj.fps);
 
                         % <-- NEW: Pass the environment object down!
-                        newEmitter.environment = obj.environment;
+                        newEmitter.environment = obj.oceanEnv;
 
                         % Format the mine's location as a 1x3 vector [x, y, z]
                         mineLocation = [mineObj.pos_x, mineObj.pos_y, 0];
@@ -459,10 +454,10 @@ classdef SESimulatorEngine < SEBase
         end
 		
 		function forceAtPos = getEnvironmentForce(obj, position)
-            if ~isempty(obj.environment)
-                forceAtPos = obj.environment.getForceAtPosition(position);
+            if ~isempty(obj.oceanEnv)
+                forceAtPos = obj.oceanEnv.getForceAtPosition(position);
             else
-                forceAtPos = [1, 1, 0];
+                forceAtPos = [0, 0, 0];
             end
         end
 

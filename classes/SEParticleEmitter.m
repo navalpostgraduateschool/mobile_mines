@@ -6,7 +6,6 @@ classdef SEParticleEmitter < SEBase
         pos; % Nx3 matrix for [x, y, z] positions
         vel; % Nx3 matrix for [x, y, z] velocities
         lifespan;
-        max_lifespan = 100; % <-- CHANGED: Increase this to 20 or 30 for a longer effect
         
         graphic_h; % Handle for the scatter plot
         axes_h;
@@ -14,13 +13,21 @@ classdef SEParticleEmitter < SEBase
         
         is_active = false; % Tracks if the emitter is currently rendering
     end
+
+    properties(SetAccess=protected)
+        max_lifespan = 100; % <-- CHANGED: Increase this to 20 or 30 for a longer effect
+    end    
     
     methods
-        function obj = SEParticleEmitter(axes_handle, num_parts)
+        function obj = SEParticleEmitter(axes_handle, num_parts, max_lifespan)
             % 1. Initialization
             if nargin > 1 && ~isempty(num_parts)
                 % FIXED: Force scalar integer
                 obj.num_particles = round(double(num_parts(1)));
+            end
+
+            if nargin>2
+                obj.setMaxLifespan(max_lifespan);
             end
             
             % Preallocate the coordinate and physics arrays as Nx3 matrices
@@ -30,6 +37,12 @@ classdef SEParticleEmitter < SEBase
             
             if nargin > 0 && ishandle(axes_handle)
                 obj.initDisplay(axes_handle);
+            end
+        end
+
+        function setMaxLifespan(obj, n)
+            if nargin>1 && ~isempty && isnumeric(n) && n>0
+                obj.max_lifespan = n;
             end
         end
         
