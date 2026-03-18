@@ -33,6 +33,11 @@ classdef SEEnvironment < SEBase
         function setDirection(obj, val)
             obj.direction = val;
         end
+
+        function setHeading(obj, val)
+            obj.setDirection(val);
+        end
+
         function setMode(obj, val)
             obj.mode = val;
         end

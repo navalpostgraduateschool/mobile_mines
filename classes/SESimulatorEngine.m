@@ -17,8 +17,6 @@ classdef SESimulatorEngine < SEBase
 
         % Group 7 (explosions) addition
         activeEmitters = []; % Array to track active particle emitters
-        currentArrow_h; % <-- NEW: Handle for the visual arrow
-        currentText_h;  % <-- NEW: Handle for the text label
 
         time_multiplier = 10; % Speed up the simulation by this factor
         animate = true;
@@ -213,34 +211,6 @@ classdef SESimulatorEngine < SEBase
             obj.axes_h = axes_h; % <-- NEW: Save the handle for the engine to use!
             obj.fleet.setAxesHandle(axes_h);
             obj.minefield.setAxesHandle(axes_h);
-
-            % NEW: Draw the ocean current indicator in the bottom right corner
-            if isempty(obj.currentArrow_h) || ~ishandle(obj.currentArrow_h)
-                % Get the current limits of the axes to place the arrow dynamically
-                xlims = get(axes_h, 'XLim');
-                ylims = get(axes_h, 'YLim');
-                
-                % Position at 85% of X width, and 10% of Y height (Bottom Right)
-                x_pos = xlims(1) + 0.85 * (xlims(2) - xlims(1));
-                y_pos = ylims(1) + 0.10 * (ylims(2) - ylims(1));
-                
-                % Query the environment force (at a dummy position like [0,0,0])
-                envForce = obj.getEnvironmentForce([0, 0, 0]);
-                
-                % Scale the arrow purely for visual rendering
-                visualScale = 0.5; % Adjust this if the arrow is too big/small!
-                u = envForce(1) * visualScale;
-                v = envForce(2) * visualScale;
-                
-                % Use quiver to draw a directional arrow without wiping the canvas
-                hold(axes_h, 'on'); 
-                obj.currentArrow_h = quiver(axes_h, x_pos, y_pos, u, v, 0, ...
-                    'Color', '#0072BD', 'LineWidth', 2, 'MaxHeadSize', 2);
-                
-                % Add a label nearby
-                obj.currentText_h = text(axes_h, x_pos, y_pos - (0.05 * (ylims(2) - ylims(1))), 'Current', ...
-                    'Color', '#0072BD', 'FontSize', 12, 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
-            end
         end
 
         function behaviors = getValidFleetBehaviors(obj)
@@ -461,7 +431,6 @@ classdef SESimulatorEngine < SEBase
             end
         end
 
-
         function delete(obj)
             obj.stop();
 
@@ -470,19 +439,8 @@ classdef SESimulatorEngine < SEBase
                     delete(obj.activeEmitters(e));
                 end
             end
-            obj.activeEmitters = [];
-
-            if ~isempty(obj.currentArrow_h) && isgraphics(obj.currentArrow_h)
-                delete(obj.currentArrow_h);
-            end
-            obj.currentArrow_h = [];
-
-            if ~isempty(obj.currentText_h) && isgraphics(obj.currentText_h)
-                delete(obj.currentText_h);
-            end
-            obj.currentText_h = [];
+            obj.activeEmitters = [];            
         end
-
 
 
         %ADDED
