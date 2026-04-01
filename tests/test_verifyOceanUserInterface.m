@@ -4,6 +4,16 @@ function test_verifyOceanEnvironment()
     logger = [];
 
     try
+        thisFile = mfilename('fullpath');
+        testsFolder = fileparts(thisFile);
+        projectRoot = fileparts(testsFolder);
+
+        oldFolder = pwd;
+        cleanupObj = onCleanup(@() cd(oldFolder)); %#ok<NASGU>
+        cd(projectRoot);
+        
+        addpath(genpath(projectRoot));
+
         mm_pathsetup(); % Ensure paths are loaded
         logger = Logger.getInstance();        
         logger.log('INFO', 'Starting Ocean Environment headless test.');
@@ -35,6 +45,7 @@ function test_verifyOceanEnvironment()
             %add numbers to the sim
             app.simEngine.setNumMines(10);
             app.simEngine.setNumShips(5);
+            app.simEngine.setMineType('static');
 
             %start the sim
             app.simEngine.run(1);
